@@ -1,0 +1,17 @@
+{
+  "ga": {
+    "version": "master",
+    "destinations": [
+      "jarvis@120.55.97.145:/teambition/server/striker-ga"
+    ],
+    "nochdir": true,
+    "only": [
+      "api**",
+      "bin**",
+      "process**",
+      "services**",
+      "app.js",
+      "package.json"
+    ]
+  }
+}

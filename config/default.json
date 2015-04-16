@@ -1,0 +1,6 @@
+{
+  "port": 3000,
+  "host": "http://localhost:3000",
+  "tokenSecret": ["tokenSecretXXX"],
+  "expires": 172800
+}

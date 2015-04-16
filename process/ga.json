@@ -1,0 +1,9 @@
+{
+  "name": "striker-ga",
+  "script": "./app.js",
+  "exec_mode": "cluster_mode",
+  "instances": 2,
+  "env": {
+    "NODE_ENV": "ga"
+  }
+}
