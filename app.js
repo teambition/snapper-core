@@ -1,38 +1,39 @@
 'use strict';
 
 const Toa = require('toa');
+const http = require('http');
 const config = require('config');
-const toaBody = require('toa-body');
 const toaToken = require('toa-token');
+const debug = require('debug')('snapper');
+const WsServer = require('engine.io').Server;
 
+const packageInfo = require('./package.json');
+const ws = require('./services/ws');
+const rpc = require('./services/rpc');
 const tools = require('./services/tools');
-const restAPI = require('./services/rest');
+
+
+const app = Toa(function() {
+  var res = {
+    server: packageInfo.name,
+    version: packageInfo.version,
+  };
+
+  if (this.config.env === 'development') {
+    res.clientsCount = this.ws.clientsCount;
+    res.clients = Object.keys(this.ws.clients);
+  }
+  this.body = res;
+});
 
 /**
  * 启动服务
  */
-
-const app = Toa(function*(Thunk) {
-  this.set('access-control-allow-credentials', 'true');
-  this.set('access-control-allow-origin', this.get('origin') || '*');
-  this.set('access-control-allow-methods', 'GET, POST, DELETE, HEAD, OPTIONS');
-  this.set('access-control-allow-headers', 'authorization');
-  yield restAPI.route(this, Thunk);
-});
-
-config.env = app.config.env;
-app.onerror = tools.logErr;
-
-toaBody(app);
-toaToken(app, config.tokenSecret, {
-  expiresInSeconds: config.expires,
-  getToken: function() {
-    if (!/^(GET|HEAD)$/.test(this.method)) return;
-    return this.query.Signature; // GET 请求同时允许 Authorization header 和 Signature query
-  }
-});
-
 module.exports = app.listen(config.port);
+
+toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
+app.context.rpc = rpc(app);
+app.context.ws = ws(app);
 
 tools.logInfo('start', {
   listen: config.port,

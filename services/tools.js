@@ -4,8 +4,6 @@ const fs = require('fs');
 const util = require('util');
 const crypto = require('crypto');
 const createError = require('http-errors');
-const thunkStream = require('thunk-stream');
-const childExec = require('child_process').exec;
 const slice = Array.prototype.slice;
 
 exports.log = function(err) {
@@ -40,47 +38,10 @@ exports.createError = function() {
   return createError.apply(null, arguments);
 };
 
-exports.hashMD5 = function(buffer) {
+exports.base64ID = function(buffer) {
   if (!Buffer.isBuffer(buffer)) buffer = new Buffer(String(buffer));
-  return crypto.createHash('md5').update(buffer).digest('hex');
-};
-
-exports.statFile = function(filepath) {
-  return function(callback) {
-    fs.stat(filepath, callback);
-  };
-};
-
-exports.deleteFileSafe = function(filepath) {
-  return function(callback) {
-    callback = callback || noOp;
-    fs.exists(filepath, function(exists) {
-      if (!exists) return callback();
-      fs.unlink(filepath, function(err) {
-        if (err) logErr('unlink %j error: %s', filepath, err);
-        return callback();
-      });
-    });
-  };
-};
-
-exports.exec = function() {
-  var args = slice.call(arguments);
-  return function(callback) {
-    args.push(callback || noOp);
-    childExec.apply(null, args);
-  };
-};
-
-exports.stream2Buffer = function(stream) {
-  var chunks = [];
-
-  stream.on('data', function(chunk) {
-    chunks.push(chunk);
-  });
-  return thunkStream(stream)(function() {
-    return Buffer.concat(chunks);
-  });
+  var id = crypto.createHash('md5').update(buffer).digest('base64');
+  return id.replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '~');
 };
 
 exports.safeDecodeURIComponent = function(str) {
