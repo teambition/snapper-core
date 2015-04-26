@@ -4,6 +4,7 @@ const fs = require('fs');
 const config = require('config');
 const redis = require('thunk-redis');
 
+const msg = require('./msg');
 const tools = require('./tools');
 
 const redisPrefix = config.redisPrefix;
@@ -93,23 +94,39 @@ exports.leaveRoom = function(room, consumerId) {
 
 // by rpc, push messages to redis queue
 exports.pushMessage = function(consumerId, message) {
-  client.rpushx(genQueueId(consumerId), JSON.stringify(message))(tools.logErr);
+  client.rpushx(genQueueId(consumerId), message)(tools.logErr);
   // trigger pullMessage
   client.publish(`${redisPrefix}:message`, consumerId);
 };
 
 // by rpc, broadcast messages to redis queue
 exports.broadcastMessage = function(room, message) {
-  client.evalsha(broadcastLuaSHA, 1, genRoomId(room), JSON.stringify(message));
+  client.evalsha(broadcastLuaSHA, 1, genRoomId(room), message);
 };
 
 // to consumer, auto pull messages from redis queue
 exports.pullMessage = function(consumerId) {
   var socket = exports.consumers[consumerId];
   if (!socket || socket.ioPending) return;
+
+  socket.ioPending = true;
+  var queueId = genQueueId(consumerId);
+  // 一次批量发送最多 20 条消息
+  client.lrange(queueId, 0, 19)(function*(err, messages) {
+    if (err) throw err;
+    if (!messages.length) return;
+    yield socket.sendMessages(messages);
+    yield client.ltrim(queueId, messages.length, -1);
+    return true;
+  })(function(err, res) {
+    socket.ioPending = null;
+    if (err !== null) tools.logErr(err);
+    else if (res === true) exports.pullMessage(consumerId);
+  });
 };
 
 // List, consumer's message queue key
+
 function genQueueId(consumerId) {
   return `${redisPrefix}:L:${consumerId}`;
 }

@@ -2,14 +2,40 @@
 
 const config = require('config');
 const debug = require('debug')('snapper');
-const WsServer = require('engine.io').Server;
+const engine = require('engine.io');
+const Thunk = require('thunks')();
+const jsonrpc = require('jsonrpc-lite');
 
 const io = require('./io');
 const tools = require('./tools');
+const TIMEOUT = 60 * 1000;
+
+// return thunk
+engine.Socket.prototype.rpcId = 0;
+engine.Socket.prototype.ioPending = false;
+engine.Socket.prototype.pendingRPC = null;
+engine.Socket.prototype.sendMessages = function(messagesArray) {
+  return Thunk.call(this, function(callback) {
+    var id = ++this.rpcId;
+    var msgObj = jsonrpc.request(id, 'put', JSON.parse(`[${messagesArray.join(',')}]`));
+    var timer = setTimeout(function() {
+      callback(new Error(`Send messages time out, ${this.id}`));
+    }, TIMEOUT);
+
+    this.pendingRPC = {
+      id: id,
+      callback: function(err, res) {
+        clearTimeout(timer);
+        callback(err, res);
+      }
+    };
+    this.send(JSON.sringify(msgObj));
+  });
+};
 
 module.exports = function(app) {
 
-  var wsServer = new WsServer({
+  var wsServer = new engine.Server({
     cookie: 'snapper.ws',
     allowRequest: function(req, callback) {
       debug('handshake request: %s', req.url, req._query, req.headers);
@@ -33,10 +59,8 @@ module.exports = function(app) {
   })
   .on('connection', function(socket) {
     debug('socket connected: %s', socket.id, socket.request.session);
-
     if (socket.request.session.prevId) io.removeConsumer(socket.request.session.prevId);
     io.addConsumer(socket.id);
-
     socket
       .on('close', function(msg) {
         debug('socket closed: %s', this.id, msg);
@@ -47,6 +71,16 @@ module.exports = function(app) {
       })
       .on('message', function(data) {
         debug('socket message: %s', this.id, data);
+
+        var res = jsonrpc.parse(data);
+        if (res.payload.id !== this.pendingRPC.id) return;
+        if (res.type !== 'success' && res.type !== 'error') return;
+
+        var callback = this.pendingRPC.callback;
+        this.pendingRPC = null;
+
+        if (res.type === 'error') callback(res.payload.error);
+        else callback(null, res.payload.result);
       })
       .on('error', function(err) {
         debug('socket error: %s', this.id, err);
