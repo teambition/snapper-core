@@ -1,41 +1,53 @@
 'use strict';
 
+const net = require('net');
 const config = require('config');
-const PullSocket = require('axon').PullSocket;
+const jsonrpc = require('jsonrpc-lite');
 const debug = require('debug')('snapper');
-const Message = require('amp-message');
-const Parser = require('amp').Stream;
+
+const io = require('./io');
 const tools = require('./tools');
 
 module.exports = function(app) {
+  var server = net.createServer(function(socket) {
+    socket
+      .once('data', function(chunk) {
+        chunk = chunk.toString();
+        debug('socket message: %s', chunk);
+        try {
+          socket.token = app.verifyToken(JSON.parse(chunk).token);
+        } catch (err) {
+          return socket.end('Unauthorized: ' + err);
+        }
+        this.write('OK');
 
-  // overwrite
-  PullSocket.prototype.addSocket = function(sock) {
-    var ctx = this;
-    var parser = new Parser();
-    var i = this.socks.push(sock) - 1;
-    debug('add socket %d', i);
-    sock.pipe(parser);
-    // verify token first, if failed, end the socket
-    parser.once('data', function(chunk) {
-      try {
-        sock.token = app.verifyToken(JSON.parse(chunk.toString()).token);
-      } catch (err) {
-        return sock.end('Unauthorized: ' + err);
-      }
-      parser.on('data', function(chunk){
-        var msg = new Message(chunk);
-        ctx.emit.apply(ctx, ['message', sock].concat(msg.args));
+        socket.on('data', function(chunk) {
+          var data = chunk.toString();
+          debug('socket message: %s', data);
+
+          var res = jsonrpc.parse(data);
+          if (res.type !== 'request') {
+            tools.logErr(new Error(`Receive a unhandle message: ${data}`));
+            return;
+          }
+
+          this.write(JSON.stringify(jsonrpc.success(res.payload.id, 'OK')));
+
+          var messages = res.payload.params;
+          while (messages.length) {
+            let message = messages.shift();
+            if (typeof message.room !== 'string' || typeof message.message !== 'string')
+              continue;
+            io.broadcastMessage(message.room, message.message);
+          }
+        });
+      })
+      .on('error', function(err) {
+        tools.logErr(err);
+        this.end();
       });
-    });
-  };
-
-  var socketServer = new PullSocket();
-
-  socketServer.bind(config.rpcPort);
-
-  socketServer.on('message', function(msg) {
-    console.log('message', msg);
   });
-  return socketServer;
+
+  server.listen(config.rpcPort);
+  return server;
 };

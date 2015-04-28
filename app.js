@@ -32,7 +32,7 @@ const app = Toa(function() {
 module.exports = app.listen(config.port);
 
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
-app.context.rpc = rpc(app);
+// app.context.rpc = rpc(app);
 app.context.ws = ws(app);
 
 tools.logInfo('start', {
