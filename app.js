@@ -32,8 +32,19 @@ const app = Toa(function() {
 module.exports = app.listen(config.port);
 
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
-// app.context.rpc = rpc(app);
+app.context.rpc = rpc(app);
 app.context.ws = ws(app);
+
+// pm2 gracefulReload
+app.onmessage = function(msg) {
+  if (msg === 'shutdown') {
+    this.context.rpc.close(function() {
+      app.server.close(function() {
+        process.exit(0);
+      });
+    });
+  }
+};
 
 tools.logInfo('start', {
   listen: config.port,

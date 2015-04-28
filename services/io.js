@@ -5,7 +5,6 @@ const config = require('config');
 const redis = require('thunk-redis');
 const debug = require('debug')('snapper');
 
-const msg = require('./msg');
 const tools = require('./tools');
 
 const redisPrefix = config.redisPrefix;

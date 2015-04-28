@@ -36,7 +36,8 @@
     "gulp-mocha": "^2.0.1",
     "gulp-sequence": "^0.3.2",
     "mocha": "^2.2.3",
-    "supertest": "^0.15.0"
+    "supertest": "^0.15.0",
+    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git"
   },
   "scripts": {
     "start": "NODE_ENV=development node app.js",
