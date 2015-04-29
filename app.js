@@ -5,7 +5,6 @@ const http = require('http');
 const config = require('config');
 const toaToken = require('toa-token');
 const debug = require('debug')('snapper');
-const WsServer = require('engine.io').Server;
 
 const packageInfo = require('./package.json');
 const ws = require('./services/ws');

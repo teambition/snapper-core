@@ -23,7 +23,7 @@ module.exports = function(app) {
 
   function onAuth(chunk) {
     var data = chunk.toString();
-    debug('socket message: %s', data);
+    debug('rpc message: %s', data);
 
     data = jsonrpc.parse(data);
     if (data.type !== 'request' || data.payload.method !== 'auth')
@@ -37,7 +37,7 @@ module.exports = function(app) {
 
   function onData(chunk) {
     var data = chunk.toString();
-    debug('socket message: %s', data);
+    debug('rpc message: %s', this.producerId, data);
 
     data = jsonrpc.parse(data);
     if (data.type !== 'request') {
@@ -65,6 +65,7 @@ module.exports = function(app) {
           if (validString(param[0]) && validString(param[1]))
             io.broadcastMessage(param[0], param[1]);
         }
+        if (socket.invalidRequestCount) socket.invalidRequestCount--;
         break;
 
       case 'subscribe':
@@ -85,6 +86,7 @@ module.exports = function(app) {
           socket.token = app.verifyToken(data.params[0]);
           // producer token should have producerId, to different from consumer auth
           if (!validString(socket.token.producerId)) throw new Error('invalid token');
+          socket.producerId = socket.token.producerId;
         } catch (err) {
           res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(err.message, 0));
           socket.write(JSON.stringify(res));
@@ -93,7 +95,7 @@ module.exports = function(app) {
         break;
 
       default:
-        this.invalidRequestCount++;
+        socket.invalidRequestCount++;
         res = jsonrpc.error(data.id, jsonrpc.JsonRpcError.methodNotFound());
     }
 

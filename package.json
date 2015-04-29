@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   "dependencies": {
     "config": "~1.12.0",
     "debug": "^2.1.3",
-    "engine.io": "^1.5.1",
+    "engine.io": "git://github.com/teambition/engine.io.git",
     "http-errors": "~1.3.1",
     "jsonrpc-lite": "^1.0.0",
     "thunk-redis": "^0.9.0",
@@ -31,13 +31,14 @@
     "toa-token": "~1.1.3"
   },
   "devDependencies": {
+    "engine.io-client": "^1.5.1",
     "gulp": "^3.8.11",
     "gulp-jshint": "^1.10.0",
     "gulp-mocha": "^2.0.1",
     "gulp-sequence": "^0.3.2",
     "mocha": "^2.2.3",
-    "supertest": "^0.15.0",
-    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git"
+    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git",
+    "supertest": "^0.15.0"
   },
   "scripts": {
     "start": "NODE_ENV=development node app.js",
