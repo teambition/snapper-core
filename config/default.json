@@ -1,6 +1,6 @@
 {
-  "port": 7700,
-  "rpcPort": 7800,
+  "port": 7701,
+  "rpcPort": 7700,
   "redisPrefix": "SNP",
   "tokenSecret": ["tokenSecretXXX"],
   "tokenExpires": 172800,

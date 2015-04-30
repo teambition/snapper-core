@@ -1,8 +1,8 @@
 {
-  "name": "striker",
+  "name": "snapper",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
-  "instances": 6,
+  "instances": 4,
   "env": {
     "NODE_ENV": "production"
   }

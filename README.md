@@ -6,6 +6,8 @@ Teambition message server, based on Redis.
 
 - redis
 
+### Enable `nginx ip_hash`: http://socket.io/docs/using-multiple-nodes/
+
 ### API
 
 ### install

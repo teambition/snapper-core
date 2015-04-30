@@ -1,9 +1,10 @@
 {
-  "name": "snapper-ga",
+  "name": "snapper-dev",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
-  "instances": 2,
+  "instances": 4,
   "env": {
+    "DEBUG": "snapper",
     "NODE_ENV": "ga"
   }
 }

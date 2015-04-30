@@ -11,7 +11,7 @@ const ws = require('./services/ws');
 const rpc = require('./services/rpc');
 const tools = require('./services/tools');
 
-
+const NODE_APP_INSTANCE = +process.env.NODE_APP_INSTANCE || 0;
 const app = Toa(function() {
   var res = {
     server: packageInfo.name,
@@ -25,10 +25,14 @@ const app = Toa(function() {
   this.body = res;
 });
 
+app.config = {
+  instance: NODE_APP_INSTANCE
+};
+
 /**
  * 启动服务
  */
-module.exports = app.listen(config.port);
+module.exports = app.listen(config.port + NODE_APP_INSTANCE);
 
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
 app.context.rpc = rpc(app);
@@ -46,6 +50,7 @@ app.onmessage = function(msg) {
 };
 
 tools.logInfo('start', {
-  listen: config.port,
+  listen: config.port + NODE_APP_INSTANCE,
+  rpcPort: config.rpcPort,
   appConfig: app.config
 });
