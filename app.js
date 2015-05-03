@@ -32,11 +32,13 @@ app.config = {
 /**
  * 启动服务
  */
-module.exports = app.listen(config.port + NODE_APP_INSTANCE);
 
+app.listen(config.port + NODE_APP_INSTANCE);
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
 app.context.rpc = rpc(app);
 app.context.ws = ws(app);
+
+module.exports = app;
 
 // pm2 gracefulReload
 app.onmessage = function(msg) {

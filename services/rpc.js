@@ -1,6 +1,7 @@
 'use strict';
 
 const net = require('net');
+const Bufsp = require('bufsp');
 const config = require('config');
 const jsonrpc = require('jsonrpc-lite');
 const debug = require('debug')('snapper');
@@ -10,45 +11,57 @@ const tools = require('./tools');
 
 module.exports = function(app) {
   var server = net.createServer(function(socket) {
+    socket.bufsp = new Bufsp({
+      encoding: 'utf8',
+      returnString: true
+    });
+
+    socket.pipe(socket.bufsp);
+
     socket
-      .once('data', onAuth)
       .on('error', function(err) {
         tools.logErr(err);
         this.end(err.message);
       });
+
+    socket.bufsp
+      .once('data', onAuth)
+      .on('finish', function() {
+        socket.bufsp.removeAllListeners();
+        socket.removeAllListeners();
+        debug('socket finish: %s', socket.producerId);
+      });
+
+    function onAuth(message) {
+      debug('rpc message: %s', message);
+
+      var res = jsonrpc.parse(message);
+      if (res.type !== 'request' || res.payload.method !== 'auth')
+        return socket.end('Unauthorized: ' + message);
+
+      if (!handleRPC(socket, res.payload)) return socket.end();
+      // ready to listen
+      socket.invalidRequestCount = 0;
+      this.on('data', onData);
+    }
+
+    function onData(message) {
+      debug('rpc message: %s', socket.producerId, message);
+
+      var res = jsonrpc.parse(message);
+      if (res.type !== 'request') {
+        tools.logErr(new Error(`Receive a unhandle message: ${message}`));
+        socket.invalidRequestCount++;
+        if (socket.invalidRequestCount > 100) socket.end('excessive invalid requests');
+        return;
+      }
+
+      handleRPC(socket, res.payload);
+    }
   });
 
   server.listen(config.rpcPort);
   return server;
-
-  function onAuth(chunk) {
-    var data = chunk.toString();
-    debug('rpc message: %s', data);
-
-    data = jsonrpc.parse(data);
-    if (data.type !== 'request' || data.payload.method !== 'auth')
-      return this.end('Unauthorized: ' + chunk);
-
-    if (!handleRPC(this, data.payload)) return this.end();
-    // ready to listen
-    this.invalidRequestCount = 0;
-    this.on('data', onData);
-  }
-
-  function onData(chunk) {
-    var data = chunk.toString();
-    debug('rpc message: %s', this.producerId, data);
-
-    data = jsonrpc.parse(data);
-    if (data.type !== 'request') {
-      tools.logErr(new Error(`Receive a unhandle message: ${data}`));
-      this.invalidRequestCount++;
-      if (this.invalidRequestCount > 100) this.end('excessive invalid requests');
-      return;
-    }
-
-    handleRPC(this, data.payload);
-  }
 
   function handleRPC(socket, data) {
     var res = jsonrpc.success(data.id, 'OK');
@@ -60,10 +73,13 @@ module.exports = function(app) {
         //   [room2, message2]
         //   ...
         // ]
+        res.result = 0;
         while (data.params.length) {
           let param = data.params.shift();
-          if (validString(param[0]) && validString(param[1]))
+          if (validString(param[0]) && validString(param[1])) {
+            res.result++;
             io.broadcastMessage(param[0], param[1]);
+          }
         }
         if (socket.invalidRequestCount) socket.invalidRequestCount--;
         break;
@@ -85,11 +101,11 @@ module.exports = function(app) {
         try {
           socket.token = app.verifyToken(data.params[0]);
           // producer token should have producerId, to different from consumer auth
-          if (!validString(socket.token.producerId)) throw new Error('invalid token');
+          if (!validString(socket.token.producerId)) throw new Error('invalid signature');
           socket.producerId = socket.token.producerId;
         } catch (err) {
-          res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(err.message, 0));
-          socket.write(JSON.stringify(res));
+          res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(err.message, 400));
+          socket.write(socket.bufsp.encode(JSON.stringify(res)));
           return false;
         }
         break;
@@ -99,7 +115,7 @@ module.exports = function(app) {
         res = jsonrpc.error(data.id, jsonrpc.JsonRpcError.methodNotFound());
     }
 
-    socket.write(JSON.stringify(res));
+    socket.write(socket.bufsp.encode(JSON.stringify(res)));
     return true;
   }
 };
