@@ -13,6 +13,7 @@ const tools = require('./services/tools');
 
 const NODE_APP_INSTANCE = +process.env.NODE_APP_INSTANCE || 0;
 const app = Toa(function() {
+  debug('http request:', this.method, this.url, this.ip);
   var res = {
     server: packageInfo.name,
     version: packageInfo.version,
@@ -20,7 +21,12 @@ const app = Toa(function() {
 
   if (this.config.env === 'development') {
     res.clientsCount = this.ws.clientsCount;
-    res.clients = Object.keys(this.ws.clients);
+    res.websocket = 0;
+    res.polling = 0;
+    let clients = this.ws.clients;
+    for (let key in clients) {
+      ++res[clients[key].transport.name];
+    }
   }
   this.body = res;
 });
@@ -29,14 +35,21 @@ app.config = {
   instance: NODE_APP_INSTANCE
 };
 
+app.connectRPC = function() {
+  this.context.rpc = rpc(this);
+};
+app.connectWS = function() {
+  this.context.ws = ws(this);
+};
+
 /**
  * 启动服务
  */
 
 app.listen(config.port + NODE_APP_INSTANCE);
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
-app.context.rpc = rpc(app);
-app.context.ws = ws(app);
+app.connectRPC();
+app.connectWS();
 
 module.exports = app;
 

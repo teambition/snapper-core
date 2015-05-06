@@ -65,43 +65,46 @@ module.exports = function(app) {
     }
   });
 
-  wsServer.on('connection', function(socket) {
-    var session = socket.request.session;
-    debug('ws connected: %s', socket.id, session);
-    if (session.prevId) io.removeConsumer(session.prevId);
-    // init consumer's message queue if not exist
-    io.addConsumer(socket.id);
+  wsServer
+    .on('error', function(err) {
+      app.onerror(err);
+    })
+    .on('connection', function(socket) {
+      var session = socket.request.session;
+      debug('ws connected: %s', socket.id, session);
+      if (session.prevId) io.removeConsumer(session.prevId);
+      // init consumer's message queue if not exist
+      io.addConsumer(socket.id);
 
-    // bind consumer to user's room
-    // a user may have one more consumer's thread
-    io.joinRoom(session.userId, socket.id);
-    socket
-      .on('heartbeat', function() {
-        // debug('ws heartbeat: %s', this.id);
-        io.updateConsumer(this.id);
-      })
-      .on('message', function(data) {
-        debug('ws message: %s', this.id, data);
-        if (!this.pendingRPC) return;
+      // bind consumer to user's room
+      // a user may have one more consumer's thread
+      io.joinRoom(session.userId, socket.id);
+      socket
+        .on('heartbeat', function() {
+          debug('ws heartbeat: %s', this.id);
+          io.updateConsumer(this.id);
+        })
+        .on('message', function(data) {
+          debug('ws message: %s', this.id, data);
+          if (!this.pendingRPC) return;
 
-        var res = jsonrpc.parse(data);
-        if (res.payload.id !== this.pendingRPC.id) return;
+          var res = jsonrpc.parse(data);
+          if (res.payload.id !== this.pendingRPC.id) return;
 
-        if (res.type === 'success') {
-          this.pendingRPC.callback(null, res.payload.result);
-        } else {
-          this.pendingRPC.callback(res.payload.error || res.payload);
-        }
-      })
-      .on('error', function(err) {
-        debug('ws error: %s', this.id, err);
-      });
-
-    if (app.config.env === 'development') {
-      socket.on('close', function(msg) {
-        debug('ws closed: %s', this.id, msg);
-      });
-    }
+          if (res.type === 'success') {
+            this.pendingRPC.callback(null, res.payload.result);
+          } else {
+            this.pendingRPC.callback(res.payload.error || res.payload);
+          }
+        })
+        .on('error', function(err) {
+          debug('ws error: %s', this.id, err);
+          app.onerror(err);
+        })
+        .once('close', function(msg) {
+          debug('ws closed: %s', this.id, msg);
+          socket.removeAllListeners();
+        });
 
   });
 

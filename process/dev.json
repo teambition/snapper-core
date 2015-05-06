@@ -2,9 +2,10 @@
   "name": "snapper-dev",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
-  "instances": 4,
+  "instances": 2,
+  "autorestart": false,
   "env": {
-    "DEBUG": "snapper",
-    "NODE_ENV": "ga"
+    "DEBUG": "",
+    "NODE_ENV": "development"
   }
 }

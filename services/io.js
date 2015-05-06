@@ -44,7 +44,7 @@ clientSub
     if (channel !== messageChannel) return;
     debug('io message:', channel, consumerIds);
 
-    consumerIds = consumerIds.split(' ');
+    consumerIds = consumerIds.split(', ');
     for (var i = 0; i < consumerIds.length; i++) {
       if (consumerIds[i]) exports.pullMessage(consumerIds[i]);
     }

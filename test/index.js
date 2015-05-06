@@ -10,6 +10,8 @@ const app = require('../app');
 const tools = require('../services/tools');
 const Consumer = require('./lib/consumer');
 
+var producerId = 0;
+
 describe('snapper2', function() {
   after(function(callback) {
     Thunk(function*() {
@@ -23,7 +25,7 @@ describe('snapper2', function() {
     it('connect:Unauthorized', function(callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: 'xxx',
-        producerId: 'testRPC'
+        producerId: ++producerId + ''
       });
 
       producer
@@ -32,7 +34,6 @@ describe('snapper2', function() {
         })
         .on('error', function(err) {
           assert.strictEqual(err.code, 400);
-          this.close();
         })
         .on('close', callback);
     });
@@ -40,7 +41,7 @@ describe('snapper2', function() {
     it('connect:success', function(callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
-        producerId: 'testRPC'
+        producerId: ++producerId + ''
       });
 
       producer
@@ -56,19 +57,26 @@ describe('snapper2', function() {
     it('signAuth', function(callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
-        producerId: 'testRPC'
+        producerId: ++producerId + ''
       });
 
       var token = producer.signAuth({test: true});
       assert.strictEqual(app.verifyToken(token).test, true);
 
-      producer.on('close', callback).close();
+      producer
+        .on('connect', function() {
+          this.close();
+        })
+        .on('error', function(err) {
+          assert.strictEqual('Should not run', true);
+        })
+        .on('close', callback);
     });
 
     it('sendMessage', function(callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
-        producerId: 'testRPC'
+        producerId: ++producerId + ''
       });
 
       assert.throws(function() {
@@ -96,7 +104,7 @@ describe('snapper2', function() {
     it('joinRoom, leaveRoom', function(callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
-        producerId: 'testRPC'
+        producerId: ++producerId + ''
       });
 
       assert.throws(function() {
@@ -119,12 +127,110 @@ describe('snapper2', function() {
       Thunk(function* () {
         var res = yield producer.joinRoom('test', '1');
         assert.strictEqual(res, 'OK');
-        yield producer.joinRoom('test', '2');
+
+        res = yield producer.joinRoom('test', '2');
         assert.strictEqual(res, 'OK');
-        yield producer.leaveRoom('test', '1');
+
+        res = yield producer.leaveRoom('test', '1');
         assert.strictEqual(res, 'OK');
+      })(function(err) {
+        if (err) return callback(err);
         producer.close();
-      })();
+      });
     });
+
+    it('reconnecting', function(callback) {
+      var producer = new Producer(config.rpcPort, {
+        secretKeys: config.tokenSecret,
+        producerId: ++producerId + ''
+      });
+      var reconnecting = false;
+      var hadError = false;
+
+      producer
+        .on('error', function(err) {
+          hadError = err;
+        })
+        .on('connect', function() {
+          if (reconnecting) {
+            assert.strictEqual(hadError instanceof Error, true);
+            return callback();
+          }
+          app.context.rpc.destroy();
+        })
+        .on('reconnecting', function() {
+          reconnecting = true;
+          app.connectRPC();
+        });
+    });
+
+    it('close', function(callback) {
+      var producer = new Producer(config.rpcPort, {
+        secretKeys: config.tokenSecret,
+        producerId: ++producerId + ''
+      });
+      var hadError = false;
+
+      producer
+        .on('error', function(err) {
+          hadError = err;
+        })
+        .on('close', function() {
+          assert.strictEqual(hadError instanceof Error, true);
+          callback();
+        })
+        .on('connect', function() {
+          producer.sendMessage('test', '12345');
+          this.close();
+        });
+    });
+
+  });
+
+  describe('ws', function() {
+    var producer = null;
+    var host = '127.0.0.1:' + config.port;
+
+    before(function(callback) {
+      producer = new Producer(config.rpcPort, {
+        secretKeys: config.tokenSecret,
+        producerId: ++producerId + ''
+      });
+      producer
+        .on('error', function(err) {
+          console.error(err);
+        })
+        .on('connect', callback);
+    });
+
+
+    it('connect:Unauthorized', function(callback) {
+      var consumer = new Consumer(host, 'errorToken');
+
+      consumer
+        .on('open', function() {
+          assert.strictEqual('Should not run', true);
+        })
+        .on('error', function(err) {
+          assert.strictEqual(!!err, true);
+          this.disconnect();
+        })
+        .on('close', callback);
+    });
+
+    it('connect:success', function(callback) {
+      var token = producer.signAuth({userId: Consumer.genUserId()});
+      var consumer = new Consumer(host, token);
+
+      consumer
+        .on('open', function() {
+          this.disconnect();
+        })
+        .on('error', function(err) {
+          assert.strictEqual('Should not run', true);
+        })
+        .on('close', callback);
+    });
+
   });
 });

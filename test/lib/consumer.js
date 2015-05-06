@@ -2,15 +2,17 @@
 /*global describe, it, before, after, beforeEach, afterEach*/
 
 const util = require('util');
+const crypto = require('crypto');
 const assert = require('assert');
 const jsonrpc = require('jsonrpc-lite');
 const Engine = require('engine.io-client');
 const EventEmitter = require('events').EventEmitter;
 
 module.exports = WebSocket;
+WebSocket.genUserId = genUserId;
 
 // use to benchmark
-module.exports.MiniWebSocket = MiniWebSocket;
+WebSocket.MiniWebSocket = MiniWebSocket;
 
 function WebSocket(host, token) {
   this.host = host;
@@ -36,10 +38,11 @@ WebSocket.prototype.connect = function() {
   this.connection
     .on('open', function() {
       ctx.connectDelay = ctx.DELAY;
+      ctx.emit('open');
     })
     .on('close', function(err) {
       if (err) ctx.emit('error', err);
-      if (ctx.connectDelay > 600000) return;
+      if (ctx.connectDelay > 600000 || !ctx.connection) return;
 
       setTimeout(function() {
         ctx.connectDelay *= 1.5;
@@ -55,7 +58,7 @@ WebSocket.prototype.connect = function() {
       if (res.type !== 'request') ctx.emit('error', new Error('Only request can be handle'));
       // response to server
       this.send(JSON.stringify(jsonrpc.success(res.payload.id, 'OK')));
-
+      ctx.emit('jsonrpc', res.payload);
       while (res.payload.params.length) {
         try {
           var data = JSON.parse(res.payload.params.shift());
@@ -69,9 +72,12 @@ WebSocket.prototype.connect = function() {
 };
 
 WebSocket.prototype.disconnect = function() {
-  this.connection.close();
-  this.connection.removeAllListeners();
+  if (!this.connection) return;
+  var connection = this.connection;
   this.connection = null;
+  this.emit('close');
+  connection.removeAllListeners();
+  connection.close();
 };
 
 function MiniWebSocket(host, token) {
@@ -89,19 +95,28 @@ MiniWebSocket.prototype.connect = function() {
     query: `token=${this.token}`
   });
 
+  this.messageCount = 0;
+
   this.connection
-    .on('error', function(err) {
-      ctx.emit('error', err);
-    })
     .on('message', function(message) {
       var res = jsonrpc.parse(message);
-      if (res.type === 'request') // response to server
+      if (res.type === 'request') {// response to server
         this.send(JSON.stringify(jsonrpc.success(res.payload.id, 'OK')));
+        ctx.latestMessages = res.payload.params;
+        ctx.messageCount += res.payload.params.length;
+      }
     });
 };
 
 MiniWebSocket.prototype.disconnect = function() {
-  this.connection.close();
-  this.connection.removeAllListeners();
+  if (!this.connection) return;
+  var connection = this.connection;
   this.connection = null;
+
+  connection.close();
 };
+
+var userId = 0;
+function genUserId() {
+  return crypto.createHash('md5').update(new Buffer(++userId + '')).digest('hex').slice(0, 24);
+}

@@ -15,12 +15,12 @@ for index = 1, #consumers, 1 do
     removed = removed + 1
     redis.call('srem', KEYS[1], consumers[index])
   else
-    publishIds = publishIds .. ' ' .. consumers[index]
+    publishIds = publishIds .. ', ' .. consumers[index]
   end
 end
 
 if publishIds ~= '' then
-  redis.call('publish', 'REDIS_PREFIX:message', publishIds:sub(2))
+  redis.call('publish', 'REDIS_PREFIX:message', publishIds:sub(3))
 end
 
 if #consumers == removed then
