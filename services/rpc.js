@@ -8,6 +8,7 @@ const debug = require('debug')('snapper');
 
 const io = require('./io');
 const tools = require('./tools');
+const stats = require('./stats');
 
 module.exports = function(app) {
   var server = net.createServer(function(socket) {
@@ -114,6 +115,7 @@ module.exports = function(app) {
             io.broadcastMessage(param[0], param[1]);
           }
         }
+        stats.incrProducerMessages(res.result);
         if (socket.invalidRequestCount) socket.invalidRequestCount--;
         break;
 

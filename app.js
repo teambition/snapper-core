@@ -10,30 +10,23 @@ const packageInfo = require('./package.json');
 const ws = require('./services/ws');
 const rpc = require('./services/rpc');
 const tools = require('./services/tools');
+const stats = require('./services/stats');
 
-const NODE_APP_INSTANCE = +process.env.NODE_APP_INSTANCE || 0;
-const app = Toa(function() {
+const app = Toa(function*() {
   debug('http request:', this.method, this.url, this.ip);
   var res = {
     server: packageInfo.name,
     version: packageInfo.version,
   };
 
-  if (this.config.env === 'development') {
-    res.clientsCount = this.ws.clientsCount;
-    res.websocket = 0;
-    res.polling = 0;
-    let clients = this.ws.clients;
-    for (let key in clients) {
-      ++res[clients[key].transport.name];
-    }
+  if (/^development|ga$/.test(this.config.env)) {
+    res = stats.os();
+    res.stats = yield stats.clientsStats();
   }
   this.body = res;
 });
 
-app.config = {
-  instance: NODE_APP_INSTANCE
-};
+config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0);
 
 app.connectRPC = function() {
   this.context.rpc = rpc(this);
@@ -46,7 +39,7 @@ app.connectWS = function() {
  * 启动服务
  */
 
-app.listen(config.port + NODE_APP_INSTANCE);
+app.listen(config.instancePort);
 toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
 app.connectRPC();
 app.connectWS();
@@ -65,7 +58,8 @@ app.onmessage = function(msg) {
 };
 
 tools.logInfo('start', {
-  listen: config.port + NODE_APP_INSTANCE,
+  listen: config.instancePort,
   rpcPort: config.rpcPort,
-  appConfig: app.config
+  serverId: stats.serverId,
+  appConfig: app.config,
 });

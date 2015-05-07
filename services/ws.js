@@ -8,6 +8,8 @@ const debug = require('debug')('snapper');
 
 const io = require('./io');
 const tools = require('./tools');
+const stats = require('./stats');
+
 const TIMEOUT = 60 * 1000;
 
 // return thunk
@@ -79,6 +81,11 @@ module.exports = function(app) {
       // bind consumer to user's room
       // a user may have one more consumer's thread
       io.joinRoom(session.userId, socket.id);
+
+      // update stats
+      stats.incrConsumers(1);
+      stats.setConsumersStats(wsServer.clientsCount);
+
       socket
         .on('heartbeat', function() {
           debug('ws heartbeat: %s', this.id);
