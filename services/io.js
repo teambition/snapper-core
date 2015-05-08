@@ -31,13 +31,13 @@ exports.consumers = {};
 exports.addConsumer = function(consumerId) {
   var queueId = genQueueId(consumerId);
   // init messages queue
+  debug('io addConsumer:', consumerId);
   redis.client.lindex(queueId, 0)(function*(err, res) {
     var initTask = [];
     if (err) initTask.push(redis.client.del(queueId));
     if (!res) initTask.push(redis.client.rpush(queueId, '1'));
     if (initTask.length) yield initTask;
 
-    debug('io addConsumer:', consumerId);
     yield redis.client.expire(queueId, expires);
     exports.pullMessage(consumerId);
   })(tools.logErr);
@@ -56,6 +56,7 @@ exports.removeConsumer = function(consumerId) {
 // by rpc, add consumer to room
 exports.joinRoom = function(room, consumerId) {
   var roomId = genRoomId(room);
+  debug('io joinRoom:', room, consumerId);
   redis.client.sadd(roomId, consumerId)(function*(err) {
     if (err) {
       yield [
@@ -63,8 +64,6 @@ exports.joinRoom = function(room, consumerId) {
         redis.client.sadd(roomId, consumerId)
       ];
     }
-    debug('io joinRoom:', room, consumerId);
-
     // stale room will be del after 172800 sec
     yield redis.client.expire(roomId, 172800);
   })(tools.logErr);
@@ -76,6 +75,12 @@ exports.leaveRoom = function(room, consumerId) {
   debug('io leaveRoom:', room, consumerId);
 
   redis.client.srem(genRoomId(room), consumerId)(tools.logErr);
+};
+
+// for test
+exports.clearRoom = function*(room) {
+  debug('io clearRoom:', room);
+  return yield redis.client.del(genRoomId(room));
 };
 
 // by rpc, push messages to redis queue

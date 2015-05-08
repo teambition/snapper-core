@@ -13,7 +13,7 @@ gulp.task('jshint', function () {
 
 gulp.task('mocha', function () {
   return gulp.src('test/index.js', {read: false})
-    .pipe(mocha({timeout: 10000}));
+    .pipe(mocha({timeout: 100000}));
 });
 
 gulp.task('default', ['test']);

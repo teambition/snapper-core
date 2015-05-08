@@ -18,7 +18,9 @@ exports.serverId = serverId;
 
 exports.os = function() {
   var res = {
-    net: network,
+    net: (JSON.stringify(network).match(/"address":"[0-9.]+"/g) || []).map(function(ip) {
+      return ip.slice(11, -1);
+    }),
     serverId: serverId,
     mem: {
       free: (os.freemem() / 1024 / 1204).toFixed(2) + ' MB',

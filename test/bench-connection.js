@@ -2,7 +2,6 @@
 /*global describe, it, before, after, beforeEach, afterEach*/
 
 const assert = require('assert');
-const crypto = require('crypto');
 const config = require('config');
 const Thunk = require('thunks')();
 const Producer = require('snapper2-producer');
@@ -11,10 +10,9 @@ const tools = require('../services/tools');
 const Consumer = require('./lib/consumer');
 
 const clients = Object.create(null);
-const host = 'http://snapper.project.bi';
-// const host = '127.0.0.1';
+const host = 'http://push.teambition.net';
 
-const producer = new Producer(config.rpcPort, host, {
+const producer = new Producer(config.rpcPort, 'push.teambition.net', {
   secretKeys: config.tokenSecret,
   producerId: 'testRPC'
 });
@@ -49,7 +47,7 @@ var addCount = 0;
 var delCount = 0;
 function addClient() {
   return function(callback) {
-    var token = producer.signAuth({userId: user()});
+    var token = producer.signAuth({userId: Consumer.genUserId()});
     var client = new Consumer.MiniWebSocket(host, token);
     client.connection
       .once('error', function(err) {
@@ -68,9 +66,4 @@ function addClient() {
         client.disconnect();
       });
   };
-}
-
-var userId = 0;
-function user() {
-  return crypto.createHash('md5').update(new Buffer(++userId + '')).digest('hex').slice(0, 24);
 }

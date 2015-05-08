@@ -14,14 +14,26 @@ const stats = require('./services/stats');
 
 const app = Toa(function*() {
   debug('http request:', this.method, this.url, this.ip);
-  var res = {
-    server: packageInfo.name,
-    version: packageInfo.version,
-  };
 
-  if (/^development|ga$/.test(this.config.env)) {
+  var res = null;
+  var token = null;
+  if (this.path === '/stats') {
+    try {
+      token = this.token;
+      if (token.userId)
+      token = token.name === 'snapper' && token;
+    } catch (e) {
+      token = null;
+    }
+  }
+  if (token) {
     res = stats.os();
     res.stats = yield stats.clientsStats();
+  } else {
+    res = {
+      server: packageInfo.name,
+      version: packageInfo.version
+    };
   }
   this.body = res;
 });
@@ -40,7 +52,13 @@ app.connectWS = function() {
  */
 
 app.listen(config.instancePort);
-toaToken(app, config.tokenSecret, {expiresInSeconds: config.expires});
+toaToken(app, config.tokenSecret, {
+  expiresInSeconds: config.expires,
+  getToken: function() {
+    if (this.method !== 'GET') return;
+    return this.query.token; // GET 请求同时允许 Authorization header 和 Signature query
+  }
+});
 app.connectRPC();
 app.connectWS();
 

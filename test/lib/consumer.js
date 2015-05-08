@@ -38,6 +38,7 @@ WebSocket.prototype.connect = function() {
   this.connection
     .on('open', function() {
       ctx.connectDelay = ctx.DELAY;
+      ctx.id = this.id;
       ctx.emit('open');
     })
     .on('close', function(err) {
@@ -62,7 +63,7 @@ WebSocket.prototype.connect = function() {
       while (res.payload.params.length) {
         try {
           var data = JSON.parse(res.payload.params.shift());
-          if (data.e && data.d) ctx.emit(data.e, data.d);
+          if (data && typeof data.e === 'string') ctx.emit(data.e, data.d);
           else ctx.emit('message', data);
         } catch (err) {
           ctx.emit('error', err);

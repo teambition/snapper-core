@@ -2,7 +2,7 @@
   "name": "snapper",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
-  "instances": 4,
+  "instances": 7,
   "env": {
     "NODE_ENV": "production"
   }
