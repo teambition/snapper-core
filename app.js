@@ -20,8 +20,7 @@ const app = Toa(function*() {
   if (this.path === '/stats') {
     try {
       token = this.token;
-      if (token.userId)
-      token = token.name === 'snapper' && token;
+      if (token.userId) token = token.name === 'snapper' && token;
     } catch (e) {
       token = null;
     }

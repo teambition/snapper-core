@@ -22,7 +22,6 @@ module.exports = function(app) {
     socket
       .on('error', function(err) {
         app.onerror(err);
-        socket.end();
       })
       .on('end', function() {
         if (this.id) delete server.clients[this.id];
@@ -85,13 +84,14 @@ module.exports = function(app) {
   };
 
   server.on('error', function(err) {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`${config.rpcPort} in use, retrying listening...`);
-      setTimeout(function () {
-        server.close();
-        server.listen(config.rpcPort);
-      }, 1000);
-    } else app.onerror(err);
+    // if (err.code === 'EADDRINUSE') {
+    //   console.log(`${config.rpcPort} in use, retrying listening...`);
+    //   setTimeout(function () {
+    //     server.close();
+    //     server.listen(config.rpcPort);
+    //   }, 1000);
+    // }
+    app.onerror(err);
   });
 
   server.listen(config.rpcPort);

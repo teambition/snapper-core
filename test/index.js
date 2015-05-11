@@ -158,7 +158,7 @@ describe('snapper2', function() {
 
       producer
         .on('error', function(err) {
-          assert.strictEqual('Should not run', true);
+          assert.strictEqual(err instanceof Error, true);
         })
         .on('connect', function() {
           if (reconnecting) return callback();
