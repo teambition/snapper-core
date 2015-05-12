@@ -80,11 +80,12 @@ module.exports = function(app) {
 
       // bind consumer to user's room
       // a user may have one more consumer's thread
-      io.joinRoom(session.userId, socket.id);
-
-      // update stats
-      stats.incrConsumers(1);
-      stats.setConsumersStats(wsServer.clientsCount);
+      io.joinRoom(session.userId, socket.id)(function(err) {
+        if (err) return socket.end();
+        // update stats
+        stats.incrConsumers(1);
+        stats.setConsumersStats(wsServer.clientsCount);
+      });
 
       socket
         .on('heartbeat', function() {

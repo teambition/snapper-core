@@ -57,24 +57,25 @@ exports.removeConsumer = function(consumerId) {
 exports.joinRoom = function(room, consumerId) {
   var roomId = genRoomId(room);
   debug('io joinRoom:', room, consumerId);
-  redis.client.sadd(roomId, consumerId)(function*(err) {
+  return redis.client.sadd(roomId, consumerId)(function*(err, res) {
     if (err) {
-      yield [
+      res = (yield [
         redis.client.del(roomId),
         redis.client.sadd(roomId, consumerId)
-      ];
+      ])[1];
     }
     // stale room will be del after 172800 sec
     yield redis.client.expire(roomId, 172800);
-  })(tools.logErr);
-  stats.addRoomsHyperlog(room);
+    stats.addRoomsHyperlog(room);
+    return res;
+  });
 };
 
 // by rpc, remove consumer from room
 exports.leaveRoom = function(room, consumerId) {
   debug('io leaveRoom:', room, consumerId);
 
-  redis.client.srem(genRoomId(room), consumerId)(tools.logErr);
+  return redis.client.srem(genRoomId(room), consumerId);
 };
 
 // for test

@@ -98,8 +98,7 @@ module.exports = function(app) {
   return server;
 
   function handleRPC(socket, data) {
-    var res = jsonrpc.success(data.id, 'OK');
-
+    var res = null;
     switch (data.method) {
       case 'publish':
         // params: [
@@ -107,28 +106,38 @@ module.exports = function(app) {
         //   [room2, message2]
         //   ...
         // ]
-        res.result = 0;
+        var count = 0;
         while (data.params.length) {
           let param = data.params.shift();
           if (validString(param[0]) && validString(param[1])) {
-            res.result++;
+            count++;
             io.broadcastMessage(param[0], param[1]);
           }
         }
-        stats.incrProducerMessages(res.result);
+        stats.incrProducerMessages(count);
         if (socket.invalidRequestCount) socket.invalidRequestCount--;
+        res = jsonrpc.success(data.id, count);
+        socket.write(socket.bufsp.encode(JSON.stringify(res)));
         break;
 
       case 'subscribe':
         // params: [room, consumerId]
         if (validString(data.params[0]) && validString(data.params[1]))
-          io.joinRoom(data.params[0], data.params[1]);
+          io.joinRoom(data.params[0], data.params[1])(function(err, res) {
+            if (err) res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(String(err), 500));
+            else res = jsonrpc.success(data.id, res);
+            socket.write(socket.bufsp.encode(JSON.stringify(res)));
+          });
         break;
 
       case 'unsubscribe':
         // params: [room, consumerId]
         if (validString(data.params[0]) && validString(data.params[1]))
-          io.joinRoom(data.params[0], data.params[1]);
+          io.leaveRoom(data.params[0], data.params[1])(function(err, res) {
+            if (err) res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(String(err), 500));
+            else res = jsonrpc.success(data.id, res);
+            socket.write(socket.bufsp.encode(JSON.stringify(res)));
+          });
         break;
 
       case 'auth':
@@ -139,7 +148,8 @@ module.exports = function(app) {
           if (!validString(socket.token.producerId)) throw new Error('invalid signature');
           socket.id = tools.base64ID(data.params[0]);
           socket.producerId = socket.token.producerId;
-          res.result = {id: socket.id};
+          res = jsonrpc.success(data.id, {id: socket.id});
+          socket.write(socket.bufsp.encode(JSON.stringify(res)));
         } catch (err) {
           res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(err.message, 400));
           socket.write(socket.bufsp.encode(JSON.stringify(res)));
@@ -150,9 +160,9 @@ module.exports = function(app) {
       default:
         socket.invalidRequestCount++;
         res = jsonrpc.error(data.id, jsonrpc.JsonRpcError.methodNotFound());
+        socket.write(socket.bufsp.encode(JSON.stringify(res)));
     }
 
-    socket.write(socket.bufsp.encode(JSON.stringify(res)));
     return true;
   }
 };

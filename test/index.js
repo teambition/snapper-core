@@ -135,13 +135,13 @@ describe('snapper2', function() {
 
       Thunk(function* () {
         var res = yield producer.joinRoom('test', '1');
-        assert.strictEqual(res, 'OK');
+        assert.strictEqual(res, 1);
 
         res = yield producer.joinRoom('test', '2');
-        assert.strictEqual(res, 'OK');
+        assert.strictEqual(res, 1);
 
         res = yield producer.leaveRoom('test', '1');
-        assert.strictEqual(res, 'OK');
+        assert.strictEqual(res, 1);
       })(function(err) {
         if (err) return callback(err);
         producer.close();
