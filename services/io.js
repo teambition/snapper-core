@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const config = require('config');
-const debug = require('debug')('snapper');
+const debug = require('debug')('snapper:io');
 
 const redis = require('./redis');
 const tools = require('./tools');
@@ -15,7 +15,7 @@ const messageChannel = `${redisPrefix}:message`;
 redis.clientSub
   .on('message', function(channel, consumerIds) {
     if (channel !== messageChannel) return;
-    debug('io message:', channel, consumerIds);
+    debug('message:', channel, consumerIds);
 
     consumerIds = consumerIds.split(', ');
     for (var i = 0; i < consumerIds.length; i++) {
@@ -31,7 +31,7 @@ exports.consumers = {};
 exports.addConsumer = function(consumerId) {
   var queueId = genQueueId(consumerId);
   // init messages queue
-  debug('io addConsumer:', consumerId);
+  debug('addConsumer:', consumerId);
   redis.client.lindex(queueId, 0)(function*(err, res) {
     var initTask = [];
     if (err) initTask.push(redis.client.del(queueId));
@@ -49,14 +49,14 @@ exports.updateConsumer = function(consumerId) {
 
 // by ws, clear consumer's message queue
 exports.removeConsumer = function(consumerId) {
-  debug('io removeConsumer:', consumerId);
+  debug('removeConsumer:', consumerId);
   redis.client.del(genQueueId(consumerId))(tools.logErr);
 };
 
 // by rpc, add consumer to room
 exports.joinRoom = function(room, consumerId) {
   var roomId = genRoomId(room);
-  debug('io joinRoom:', room, consumerId);
+  debug('joinRoom:', room, consumerId);
   return redis.client.sadd(roomId, consumerId)(function*(err, res) {
     if (err) {
       res = (yield [
@@ -73,20 +73,20 @@ exports.joinRoom = function(room, consumerId) {
 
 // by rpc, remove consumer from room
 exports.leaveRoom = function(room, consumerId) {
-  debug('io leaveRoom:', room, consumerId);
+  debug('leaveRoom:', room, consumerId);
 
   return redis.client.srem(genRoomId(room), consumerId);
 };
 
 // for test
 exports.clearRoom = function*(room) {
-  debug('io clearRoom:', room);
+  debug('clearRoom:', room);
   return yield redis.client.del(genRoomId(room));
 };
 
 // by rpc, push messages to redis queue
 // exports.pushMessage = function(consumerId, message) {
-//   debug('io pushMessage:', consumerId, message);
+//   debug('pushMessage:', consumerId, message);
 //
 //   redis.client.rpushx(genQueueId(consumerId), message)(function(err, res) {
 //     if (err !== null) throw err;
@@ -97,7 +97,7 @@ exports.clearRoom = function*(room) {
 
 // by rpc, broadcast messages to redis queue
 exports.broadcastMessage = function(room, message) {
-  debug('io broadcastMessage:', room, message);
+  debug('broadcastMessage:', room, message);
   redis.client.evalsha(redis.broadcastLuaSHA, 1, genRoomId(room), message)(tools.logErr);
 };
 
@@ -113,7 +113,7 @@ exports.pullMessage = function(consumerId) {
     if (err) throw err;
     if (!messages.length) return;
 
-    debug('io pullMessage:', consumerId, messages);
+    debug('pullMessage:', consumerId, messages);
     yield socket.sendMessages(messages);
     yield redis.client.ltrim(queueId, messages.length, -1);
     stats.incrConsumerMessages(messages.length);

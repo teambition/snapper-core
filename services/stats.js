@@ -2,7 +2,6 @@
 
 const os = require('os');
 const config = require('config');
-const debug = require('debug')('snapper');
 
 const redis = require('./redis');
 const tools = require('./tools');

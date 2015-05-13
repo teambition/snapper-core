@@ -14,7 +14,7 @@ const broadcastLua = stripBOM(fs.readFileSync('lua/broadcast.lua', {encoding: 'u
 
 client.script('load', broadcastLua)(function(err, res) {
   if (err) throw err;
-  debug('redis add lua:', res);
+  debug('add lua:', res);
   exports.broadcastLuaSHA = res;
 });
 
