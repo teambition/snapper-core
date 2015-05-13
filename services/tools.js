@@ -38,6 +38,11 @@ exports.createError = function() {
   return createError.apply(null, arguments);
 };
 
+exports.md5 = function(buffer) {
+  if (!Buffer.isBuffer(buffer)) buffer = new Buffer(String(buffer));
+  return crypto.createHash('md5').update(buffer).digest('hex');
+};
+
 exports.base64ID = function(buffer) {
   if (!Buffer.isBuffer(buffer)) buffer = new Buffer(String(buffer));
   var id = crypto.createHash('md5').update(buffer).digest('base64');

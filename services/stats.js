@@ -6,8 +6,11 @@ const config = require('config');
 const redis = require('./redis');
 const tools = require('./tools');
 
-const network = os.networkInterfaces();
-const serverId = tools.base64ID(JSON.stringify(network));
+const network = JSON.stringify(os.networkInterfaces())
+  .match(/"address":"[^"]+"/g)
+  .map(function(ip) { return ip.slice(11, -1); });
+
+const serverId = tools.md5(JSON.stringify(network));
 const statsKey = `${config.redisPrefix}:STATS`;
 const roomKey = `${config.redisPrefix}:STATS:ROOM`;
 const serverKey = `${config.redisPrefix}:STATS:SERVERS`;
@@ -17,9 +20,7 @@ exports.serverId = serverId;
 
 exports.os = function() {
   var res = {
-    net: (JSON.stringify(network).match(/"address":"[0-9.]+"/g) || []).map(function(ip) {
-      return ip.slice(11, -1);
-    }),
+    net: network,
     serverId: serverId,
     mem: {
       free: (os.freemem() / 1024 / 1204).toFixed(2) + ' MB',

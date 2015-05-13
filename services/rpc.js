@@ -148,7 +148,7 @@ module.exports = function(app) {
           socket.token = app.verifyToken(data.params[0]);
           // producer token should have producerId, to different from consumer auth
           if (!validString(socket.token.producerId)) throw new Error('invalid signature');
-          socket.id = tools.base64ID(data.params[0]);
+          socket.id = tools.md5(data.params[0]);
           socket.producerId = socket.token.producerId;
           res = jsonrpc.success(data.id, {id: socket.id});
           socket.write(socket.bufsp.encode(JSON.stringify(res)));
