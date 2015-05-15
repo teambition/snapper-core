@@ -47,7 +47,7 @@ module.exports = function(app) {
 
       // bind consumer to user's room
       // a user may have one more consumer's thread
-      io.joinRoom(session.userId, socket.id)(function(err) {
+      io.joinRoom(`user${session.userId}`, socket.id)(function(err) {
         if (err) return socket.end();
         // update stats
         stats.incrConsumers(1);
