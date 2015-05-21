@@ -3,7 +3,7 @@
 
 const config = require('config');
 const assert = require('assert');
-const Thunk = require('thunks')();
+const thunk = require('thunks')();
 const request = require('supertest');
 const ThunkQueue = require('thunk-queue');
 const Producer = require('snapper2-producer');
@@ -22,9 +22,9 @@ describe('snapper2', function() {
   });
 
   after(function(callback) {
-    Thunk(function*() {
+    thunk(function*() {
       yield redis.client.flushall();
-      yield Thunk.delay(1000);
+      yield thunk.delay(1000);
       process.exit(0);
     })(callback);
   });
@@ -130,10 +130,10 @@ describe('snapper2', function() {
         .on('error', callback)
         .on('close', callback);
 
-      producer.joinRoom = Thunk.thunkify(producer.joinRoom);
-      producer.leaveRoom = Thunk.thunkify(producer.leaveRoom);
+      producer.joinRoom = thunk.thunkify(producer.joinRoom);
+      producer.leaveRoom = thunk.thunkify(producer.leaveRoom);
 
-      Thunk(function* () {
+      thunk(function* () {
         var res = yield producer.joinRoom('test', '1');
         assert.strictEqual(res, 1);
 
@@ -247,13 +247,14 @@ describe('snapper2', function() {
 
       consumer
         .on('open', function() {
+          var room = `user${userId}`;
           producer
-            .sendMessage(userId, JSON.stringify(1))
-            .sendMessage(userId, JSON.stringify(2))
-            .sendMessage(userId, JSON.stringify(3))
-            .sendMessage(userId, JSON.stringify(4))
-            .sendMessage(userId, JSON.stringify(5))
-            .sendMessage(userId, JSON.stringify('end'));
+            .sendMessage(room, JSON.stringify(1))
+            .sendMessage(room, JSON.stringify(2))
+            .sendMessage(room, JSON.stringify(3))
+            .sendMessage(room, JSON.stringify(4))
+            .sendMessage(room, JSON.stringify(5))
+            .sendMessage(room, JSON.stringify('end'));
         })
         .on('message', function(message) {
           if (message === 'end') {
@@ -344,7 +345,7 @@ describe('snapper2', function() {
           callback(err);
         })
         .on('close', function() {
-          Thunk.delay(1000)(function() {
+          thunk.delay(1000)(function() {
             producer
               .sendMessage('test', JSON.stringify(6))
               .sendMessage('test', JSON.stringify(7))
@@ -383,9 +384,49 @@ describe('snapper2', function() {
       producer
         .on('error', function(err) {
           console.error(err);
-          callback(err);
         })
-        .on('connect', callback);
+        .once('connect', callback);
+    });
+
+    it('2000 messages with server restart', function(callback) {
+      var received = [];
+      var messages = [];
+      while (messages.length < 2000) messages.push(messages.length);
+
+      var userId = Consumer.genUserId();
+      var consumer = new Consumer(host, producer.signAuth({userId: userId}));
+      consumer
+        .on('message', function(message) {
+          if (message === null) {
+            assert.deepEqual(received, messages);
+            this.disconnect();
+          } else received.push(message);
+        })
+        .on('error', function(err) {
+          console.error(err);
+        })
+        .on('close', callback);
+
+      thunk(function*() {
+        var _messages = messages.slice();
+        while (_messages.length) {
+          if (_messages.length === 1000) restartServer();
+          let random = Math.ceil(Math.random() * 10);
+          // 等待 random 毫秒
+          yield thunk.delay(random);
+          producer.sendMessage(`user${userId}`, JSON.stringify(_messages.shift()));
+          if (_messages.length % 100 === 0) process.stdout.write('.');
+        }
+        producer.sendMessage(`user${userId}`, JSON.stringify(null));
+      })();
+
+      function restartServer() {
+        app.context.rpc.destroy();
+        thunk.delay(1000)(function() {
+          app.connectRPC();
+        });
+      }
+
     });
 
 
@@ -395,13 +436,13 @@ describe('snapper2', function() {
       while (messages.length < 100000) messages.push(messages.length);
       while (consumers.length < 20) consumers.push(new Consumer(host, producer.signAuth({userId: Consumer.genUserId()})));
 
-      Thunk(function*() {
+      thunk(function*() {
 
         // 注册 consumers 消息处理器
         var thunkQueue = ThunkQueue();
         consumers.forEach(function(consumer, index) {
           var received = [];
-          thunkQueue.push(Thunk(function(done) {
+          thunkQueue.push(thunk(function(done) {
             consumer
               .on('message', function(message) {
                 if (message === null) {
@@ -422,7 +463,7 @@ describe('snapper2', function() {
 
         // 等待 consumers 连接并加入 chaos room
         yield consumers.map(function(consumer) {
-          return Thunk(function(done) {
+          return thunk(function(done) {
             consumer.on('open', function() {
               producer.joinRoom('chaos', consumer.id, done);
             });
@@ -434,7 +475,7 @@ describe('snapper2', function() {
         while (_messages.length) {
           let random = Math.ceil(Math.random() * 100);
           // 等待 random 毫秒
-          yield Thunk.delay(random);
+          yield thunk.delay(random);
           // 并发发送 10 * random  条消息
           let todo = _messages.splice(0, random * 10);
           // console.log('send:', todo.length, 'left:', _messages.length);

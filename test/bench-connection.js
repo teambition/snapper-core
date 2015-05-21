@@ -27,7 +27,6 @@ exports.add = function(n) {
     while (n--) {
       let consumerId = yield addClient();
       let res = yield addToRoom(consumerId);
-      assert.strictEqual(res, 'OK');
     }
     console.log('added!');
   })();

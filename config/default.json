@@ -1,6 +1,7 @@
 {
   "port": 7701,
   "rpcPort": 7700,
+  "backlog": 102400,
   "redisPrefix": "SNP",
   "tokenSecret": ["tokenSecretXXX"],
   "tokenExpires": 172800,

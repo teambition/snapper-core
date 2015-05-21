@@ -2,7 +2,7 @@
 
 const config = require('config');
 const engine = require('engine.io');
-const Thunk = require('thunks')();
+const thunk = require('thunks')();
 const jsonrpc = require('jsonrpc-lite');
 const debug = require('debug')('snapper:ws');
 
@@ -70,7 +70,7 @@ engine.Socket.prototype.rpcId = 0;
 engine.Socket.prototype.ioPending = false;
 engine.Socket.prototype.pendingRPC = null;
 engine.Socket.prototype.sendMessages = function(messages) {
-  return Thunk.call(this, function(callback) {
+  return thunk.call(this, function(callback) {
     var ctx = this;
     this.pendingRPC = new RpcCommand(this, messages, callback);
     this.send(this.pendingRPC.data);

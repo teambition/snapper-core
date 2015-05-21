@@ -50,7 +50,7 @@ app.connectWS = function() {
  * 启动服务
  */
 
-app.listen(config.instancePort);
+app.listen(config.instancePort, config.backlog);
 toaToken(app, config.tokenSecret, {
   expiresInSeconds: config.expires,
   getToken: function() {
