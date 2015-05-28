@@ -25,7 +25,7 @@ describe('snapper2', function() {
     thunk(function*() {
       yield redis.client.flushall();
       yield thunk.delay(1000);
-      process.exit(0);
+      process.emit('message', 'shutdown');
     })(callback);
   });
 

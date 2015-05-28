@@ -2,6 +2,7 @@
 
 const Toa = require('toa');
 const http = require('http');
+const pm = require('toa-pm');
 const config = require('config');
 const toaToken = require('toa-token');
 const debug = require('debug')('snapper');
@@ -46,11 +47,6 @@ app.connectWS = function() {
   this.context.ws = ws(this);
 };
 
-/**
- * 启动服务
- */
-
-app.listen(config.instancePort, config.backlog);
 toaToken(app, config.tokenSecret, {
   expiresInSeconds: config.expires,
   getToken: function() {
@@ -58,21 +54,26 @@ toaToken(app, config.tokenSecret, {
     return this.query.token; // GET 请求同时允许 Authorization header 和 Signature query
   }
 });
-app.connectRPC();
-app.connectWS();
-
-module.exports = app;
 
 // pm2 gracefulReload
-app.onmessage = function(msg) {
+pm(app, function(msg) {
   if (msg === 'shutdown') {
-    this.context.rpc.close(function() {
+    app.context.rpc.close(function() {
       app.server.close(function() {
         process.exit(0);
       });
     });
   }
-};
+});
+
+/**
+ * 启动服务
+ */
+app.listen(config.instancePort, config.backlog);
+app.connectRPC();
+app.connectWS();
+
+module.exports = app;
 
 tools.logInfo('start', {
   listen: config.instancePort,
