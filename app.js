@@ -1,83 +1,82 @@
-'use strict';
+'use strict'
 
-const Toa = require('toa');
-const http = require('http');
-const pm = require('toa-pm');
-const config = require('config');
-const toaToken = require('toa-token');
-const debug = require('debug')('snapper');
+const Toa = require('toa')
+const pm = require('toa-pm')
+const config = require('config')
+const toaToken = require('toa-token')
+const debug = require('debug')('snapper')
 
-const packageInfo = require('./package.json');
-const ws = require('./services/ws');
-const rpc = require('./services/rpc');
-const tools = require('./services/tools');
-const stats = require('./services/stats');
+const packageInfo = require('./package.json')
+const ws = require('./services/ws')
+const rpc = require('./services/rpc')
+const tools = require('./services/tools')
+const stats = require('./services/stats')
 
-const app = Toa(function*() {
-  debug('http request:', this.method, this.url, this.ip);
+const app = Toa(function *() {
+  debug('http request:', this.method, this.url, this.ip)
 
-  var res = null;
-  var token = null;
+  var res = null
+  var token = null
   if (this.path === '/stats') {
     try {
-      token = this.token;
-      if (token.userId) token = token.name === 'snapper' && token;
+      token = this.token
+      if (token.userId) token = token.name === 'snapper' && token
     } catch (e) {
-      token = null;
+      token = null
     }
   }
   if (token) {
-    res = stats.os();
-    res.stats = yield stats.clientsStats();
+    res = stats.os()
+    res.stats = yield stats.clientsStats()
   } else {
     res = {
       server: packageInfo.name,
       version: packageInfo.version
-    };
+    }
   }
-  this.body = res;
-});
+  this.body = res
+})
 
-config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0);
+config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0)
 
-app.connectRPC = function() {
-  this.context.rpc = rpc(this);
-};
-app.connectWS = function() {
-  this.context.ws = ws(this);
-};
+app.connectRPC = function () {
+  this.context.rpc = rpc(this)
+}
+app.connectWS = function () {
+  this.context.ws = ws(this)
+}
 
 toaToken(app, config.tokenSecret, {
   expiresInSeconds: config.expires,
-  getToken: function() {
-    if (this.method !== 'GET') return;
-    return this.query.token; // GET 请求同时允许 Authorization header 和 Signature query
+  getToken: function () {
+    if (this.method !== 'GET') return
+    return this.query.token // GET 请求同时允许 Authorization header 和 Signature query
   }
-});
+})
 
 // pm2 gracefulReload
-pm(app, function(msg) {
+pm(app, function (msg) {
   if (msg === 'shutdown') {
-    app.context.rpc.close(function() {
-      app.server.close(function() {
-        process.exit(0);
-      });
-    });
+    app.context.rpc.close(function () {
+      app.server.close(function () {
+        process.exit(0)
+      })
+    })
   }
-});
+})
 
 /**
  * 启动服务
  */
-app.listen(config.instancePort, config.backlog);
-app.connectRPC();
-app.connectWS();
+app.listen(config.instancePort, config.backlog)
+app.connectRPC()
+app.connectWS()
 
-module.exports = app;
+module.exports = app
 
 tools.logInfo('start', {
   listen: config.instancePort,
   rpcPort: config.rpcPort,
   serverId: stats.serverId,
-  appConfig: app.config,
-});
+  appConfig: app.config
+})
