@@ -1,8 +1,8 @@
 'use strict'
-/*global*/
+/* global */
 
 const config = require('config')
-const Thunk = require('thunks')()
+const thunk = require('thunks')()
 const ThunkQueue = require('thunk-queue')
 const Producer = require('snapper2-producer')
 
@@ -10,10 +10,10 @@ const io = require('../services/io')
 const tools = require('../services/tools')
 const Consumer = require('./lib/consumer')
 
-const host = 'push.teambition.net'
-// const host = '127.0.0.1'
+// const host = 'push.teambition.net'
+const host = '127.0.0.1:7701'
 
-const producer = new Producer(config.rpcPort, host, {
+const producer = new Producer(7700, '127.0.0.1', {
   secretKeys: config.tokenSecret,
   producerId: 'testRPC'
 })
@@ -22,7 +22,7 @@ const consumerCount = 10
 
 exports.producer = producer
 
-Thunk(function *() {
+thunk(function *() {
   var consumers = []
   var messages = []
   while (messages.length < messageCount) {
@@ -30,7 +30,10 @@ Thunk(function *() {
   }
 
   while (consumers.length < consumerCount) {
-    consumers.push(new Consumer(`http://${host}`, producer.signAuth({userId: Consumer.genUserId()})))
+    consumers.push(new Consumer(host, {
+      path: '/websocket',
+      token: producer.signAuth({userId: Consumer.genUserId()})
+    }))
   }
 
   yield io.clearRoom('benchmark')
@@ -38,27 +41,28 @@ Thunk(function *() {
   var thunkQueue = ThunkQueue()
   consumers.forEach(function (consumer, index) {
     var received = 0
-    thunkQueue.push(Thunk(function (done) {
-      consumer
-        .on('message', function (message) {
-          received++
-          if (message === null) this.disconnect()
-          else if (!index && (received % 10000) === 0) process.stdout.write('.')
-        })
-        .on('error', function (err) {
-          console.error(err)
-          done(err)
-        })
-        .on('close', done)
+    thunkQueue.push(thunk(function (done) {
+      consumer.message = function (message) {
+        received++
+        if (message === null) this.close()
+        else if (!index && (received % 10000) === 0) process.stdout.write('.')
+      }
+      consumer.onerror = function (err) {
+        console.error(err)
+        done(err)
+      }
+      consumer.onclose = done
     }))
   })
 
   // 等待 consumers 连接并加入 chaos room
+
   yield consumers.map(function (consumer) {
-    return Thunk(function (done) {
-      consumer.on('open', function () {
-        producer.joinRoom('benchmark', consumer.id, done)
-      })
+    return thunk(function (done) {
+      consumer.onopen = function () {
+        producer.joinRoom('benchmark', consumer.consumerId, done)
+      }
+      consumer.connect()
     })
   })
 

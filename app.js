@@ -54,23 +54,21 @@ toaToken(app, config.tokenSecret, {
   }
 })
 
-// pm2 gracefulReload
-pm(app, function (msg) {
-  if (msg === 'shutdown') {
-    app.context.rpc.close(function () {
-      app.server.close(function () {
-        process.exit(0)
-      })
-    })
-  }
-})
-
 /**
  * 启动服务
  */
 app.listen(config.instancePort, config.backlog)
 app.connectRPC()
 app.connectWS()
+// pm2 gracefulReload
+pm(app, function (msg) {
+  if (msg !== 'shutdown') return
+  app.context.rpc.close(function () {
+    app.server.close(function () {
+      process.exit(0)
+    })
+  })
+})
 
 module.exports = app
 

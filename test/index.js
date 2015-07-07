@@ -131,7 +131,7 @@ describe('snapper2', function () {
       producer.joinRoom = thunk.thunkify(producer.joinRoom)
       producer.leaveRoom = thunk.thunkify(producer.leaveRoom)
 
-      thunk(function * () {
+      thunk(function *() {
         var res = yield producer.joinRoom('test', '1')
         assert.strictEqual(res, 1)
 
@@ -158,8 +158,10 @@ describe('snapper2', function () {
           assert.strictEqual(err instanceof Error, true)
         })
         .on('connect', function () {
-          if (reconnecting) return callback()
-          app.context.rpc.destroy()
+          if (reconnecting) {
+            producer.close()
+            callback()
+          } else app.context.rpc.destroy()
         })
         .on('reconnecting', function () {
           reconnecting = true
@@ -200,171 +202,204 @@ describe('snapper2', function () {
         producerId: ++producerId + ''
       })
       producer
-        .on('error', function (err) {
-          console.error(err)
-          callback(err)
-        })
+        .on('error', callback)
         .on('connect', callback)
     })
 
-    it('connect:Unauthorized', function (callback) {
-      var consumer = new Consumer(host, 'errorToken')
+    after(function (callback) {
+      producer.close()
+      callback()
+    })
 
-      consumer
-        .on('open', function () {
-          assert.strictEqual('Should not run', true)
-        })
-        .on('error', function (err) {
-          assert.strictEqual(!!err, true)
-          this.disconnect()
-        })
-        .on('close', callback)
+    it('connect:Unauthorized', function (callback) {
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: 'errorToken'
+      })
+
+      consumer.onopen = function () {
+        assert.strictEqual('Should not run', true)
+      }
+      consumer.onerror = function (err) {
+        assert.strictEqual(!!err, true)
+        this.close()
+      }
+      consumer.onclose = callback
+      consumer.connect()
     })
 
     it('connect:success', function (callback) {
       var token = producer.signAuth({userId: Consumer.genUserId()})
-      var consumer = new Consumer(host, token)
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
 
-      consumer
-        .on('open', function () {
-          this.disconnect()
-        })
-        .on('error', function () {
-          assert.strictEqual('Should not run', true)
-        })
-        .on('close', callback)
+      consumer.onopen = function () {
+        this.close()
+      }
+      consumer.onerror = function () {
+        assert.strictEqual('Should not run', true)
+      }
+      consumer.onclose = callback
+      consumer.connect()
     })
 
     it('receive message in order', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, token)
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
       var res = []
 
-      consumer
-        .on('open', function () {
-          var room = `user${userId}`
-          producer
-            .sendMessage(room, JSON.stringify(1))
-            .sendMessage(room, JSON.stringify(2))
-            .sendMessage(room, JSON.stringify(3))
-            .sendMessage(room, JSON.stringify(4))
-            .sendMessage(room, JSON.stringify(5))
-            .sendMessage(room, JSON.stringify('end'))
-        })
-        .on('message', function (message) {
-          if (message === 'end') {
-            assert.deepEqual(res, [1, 2, 3, 4, 5])
-            this.disconnect()
-          } else res.push(message)
-        })
-        .on('error', function (err) {
-          console.error(err)
-          callback(err)
-        })
-        .on('close', callback)
+      consumer.onopen = function () {
+        var room = `user${userId}`
+        producer
+          .sendMessage(room, JSON.stringify(1))
+          .sendMessage(room, JSON.stringify(2))
+          .sendMessage(room, JSON.stringify(3))
+          .sendMessage(room, JSON.stringify(4))
+          .sendMessage(room, JSON.stringify(5))
+          .sendMessage(room, JSON.stringify('end'))
+      }
+
+      consumer.message = function (message) {
+        if (message === 'end') {
+          assert.deepEqual(res, [1, 2, 3, 4, 5])
+          this.close()
+        } else res.push(message)
+      }
+
+      consumer.onerror = function (err) {
+        console.error(err)
+        callback(err)
+      }
+
+      consumer.onclose = callback
+      consumer.connect()
     })
 
     it('join room and receive message', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, token)
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
       var res = []
 
-      consumer
-        .on('open', function () {
-          producer
-            .joinRoom('test', consumer.id)
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: 0
-            }))
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: '0'
-            }))
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: false
-            }))
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: {}
-            }))
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: []
-            }))
-            .sendMessage('test', JSON.stringify({
-              e: 'update',
-              d: null
-            }))
-        })
-        .on('update', function (message) {
-          if (message === null) {
-            assert.deepEqual(res, [0, '0', false, {}, []])
-            this.disconnect()
-          } else res.push(message)
-        })
-        .on('error', function (err) {
-          console.error(err)
-          callback(err)
-        })
-        .on('close', callback)
+      consumer.onopen = function () {
+        producer
+          .joinRoom('test', consumer.consumerId)
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: 0
+          }))
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: '0'
+          }))
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: false
+          }))
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: {}
+          }))
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: []
+          }))
+          .sendMessage('test', JSON.stringify({
+            e: 'update',
+            d: null
+          }))
+      }
+
+      consumer.message = function (message) {
+        assert.strictEqual(message.e, 'update')
+        if (message.d === null) {
+          assert.deepEqual(res, [0, '0', false, {}, []])
+          this.close()
+        } else res.push(message.d)
+      }
+
+      consumer.onerror = function (err) {
+        console.error(err)
+        callback(err)
+      }
+
+      consumer.onclose = callback
+      consumer.connect()
     })
 
     it('reconnect and receive message', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, token)
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
       var res = []
 
-      consumer
-        .on('open', function () {
+      consumer.onopen = function () {
+        producer
+          .joinRoom('test', consumer.consumerId)
+          .sendMessage('test', JSON.stringify(1))
+          .sendMessage('test', JSON.stringify(2))
+          .sendMessage('test', JSON.stringify(3))
+          .sendMessage('test', JSON.stringify(4))
+          .sendMessage('test', JSON.stringify(5))
+          .sendMessage('test', JSON.stringify(null))
+      }
+
+      consumer.message = function (message) {
+        if (message === null) {
+          assert.deepEqual(res, [1, 2, 3, 4, 5])
+          this.close()
+        } else res.push(message)
+      }
+
+      consumer.onerror = function (err) {
+        console.error(err)
+        callback(err)
+      }
+
+      consumer.onclose = function () {
+        thunk.delay(1000)(function () {
           producer
-            .joinRoom('test', consumer.id)
-            .sendMessage('test', JSON.stringify(1))
-            .sendMessage('test', JSON.stringify(2))
-            .sendMessage('test', JSON.stringify(3))
-            .sendMessage('test', JSON.stringify(4))
-            .sendMessage('test', JSON.stringify(5))
+            .sendMessage('test', JSON.stringify(6))
+            .sendMessage('test', JSON.stringify(7))
+            .sendMessage('test', JSON.stringify(8))
+            .sendMessage('test', JSON.stringify(9))
+            .sendMessage('test', JSON.stringify(10))
             .sendMessage('test', JSON.stringify(null))
-        })
-        .on('message', function (message) {
-          if (message === null) {
-            assert.deepEqual(res, [1, 2, 3, 4, 5])
-            this.disconnect()
-          } else res.push(message)
-        })
-        .on('error', function (err) {
-          console.error(err)
-          callback(err)
-        })
-        .on('close', function () {
-          thunk.delay(1000)(function () {
-            producer
-              .sendMessage('test', JSON.stringify(6))
-              .sendMessage('test', JSON.stringify(7))
-              .sendMessage('test', JSON.stringify(8))
-              .sendMessage('test', JSON.stringify(9))
-              .sendMessage('test', JSON.stringify(10))
-              .sendMessage('test', JSON.stringify(null))
 
-            new Consumer(host, token)
-              .on('message', function (message) {
-                if (message === null) {
-                  assert.deepEqual(res, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-                  this.disconnect()
-                } else res.push(message)
-              })
-              .on('error', function (err) {
-                console.error(err)
-                callback(err)
-              })
-              .on('close', callback)
-          })()
+          var consumer = new Consumer(host, {
+            path: '/websocket',
+            token: token
+          })
 
-        })
+          consumer.message = function (message) {
+            if (message === null) {
+              assert.deepEqual(res, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+              this.close()
+            } else res.push(message)
+          }
+
+          consumer.onerror = function (err) {
+            console.error(err)
+            callback(err)
+          }
+          consumer.onclose = callback
+          consumer.connect()
+        })()
+      }
+
+      consumer.connect()
     })
   })
 
@@ -390,18 +425,18 @@ describe('snapper2', function () {
       while (messages.length < 2000) messages.push(messages.length)
 
       var userId = Consumer.genUserId()
-      var consumer = new Consumer(host, producer.signAuth({userId: userId}))
-      consumer
-        .on('message', function (message) {
-          if (message === null) {
-            assert.deepEqual(received, messages)
-            this.disconnect()
-          } else received.push(message)
-        })
-        .on('error', function (err) {
-          console.error(err)
-        })
-        .on('close', callback)
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: producer.signAuth({userId: userId})
+      })
+      consumer.message = function (message) {
+        if (message === null) {
+          assert.deepEqual(received, messages)
+          this.close()
+        } else received.push(message)
+      }
+      consumer.onclose = callback
+      consumer.connect()
 
       thunk(function *() {
         var _messages = messages.slice()
@@ -429,7 +464,12 @@ describe('snapper2', function () {
       var consumers = []
       var messages = []
       while (messages.length < 100000) messages.push(messages.length)
-      while (consumers.length < 20) consumers.push(new Consumer(host, producer.signAuth({userId: Consumer.genUserId()})))
+      while (consumers.length < 20) {
+        consumers.push(new Consumer(host, {
+          path: '/websocket',
+          token: producer.signAuth({userId: Consumer.genUserId()})
+        }))
+      }
 
       thunk(function *() {
         // 注册 consumers 消息处理器
@@ -437,30 +477,30 @@ describe('snapper2', function () {
         consumers.forEach(function (consumer, index) {
           var received = []
           thunkQueue.push(thunk(function (done) {
-            consumer
-              .on('message', function (message) {
-                if (message === null) {
-                  assert.deepEqual(received, messages)
-                  this.disconnect()
-                } else {
-                  received.push(message)
-                  if (!index && (received.length % 10000) === 0) process.stdout.write('.')
-                }
-              })
-              .on('error', function (err) {
-                console.error(err)
-                done(err)
-              })
-              .on('close', done)
+            consumer.message = function (message) {
+              if (message === null) {
+                assert.deepEqual(received, messages)
+                this.close()
+              } else {
+                received.push(message)
+                if (!index && (received.length % 10000) === 0) process.stdout.write('.')
+              }
+            }
+            consumer.onerror = function (err) {
+              console.error(err)
+              done(err)
+            }
+            consumer.onclose = done
           }))
         })
 
         // 等待 consumers 连接并加入 chaos room
         yield consumers.map(function (consumer) {
           return thunk(function (done) {
-            consumer.on('open', function () {
-              producer.joinRoom('chaos', consumer.id, done)
-            })
+            consumer.onopen = function () {
+              producer.joinRoom('chaos', consumer.consumerId, done)
+            }
+            consumer.connect()
           })
         })
 

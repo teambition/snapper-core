@@ -1,16 +1,16 @@
 'use strict'
-/*global*/
+/* global */
 
 const config = require('config')
-const Thunk = require('thunks')()
+const thunk = require('thunks')()
 const Producer = require('snapper2-producer')
 
 const Consumer = require('./lib/consumer')
 
 const clients = Object.create(null)
-const host = 'http://push.teambition.net'
+const host = '127.0.0.1:7701'
 
-const producer = new Producer(config.rpcPort, 'push.teambition.net', {
+const producer = new Producer(7700, '127.0.0.1', {
   secretKeys: config.tokenSecret,
   producerId: 'testRPC'
 })
@@ -21,17 +21,19 @@ exports.producer = producer
 exports.add = function (n) {
   n = n > 0 ? +n : 1
 
-  Thunk(function *() {
+  thunk(function *() {
     while (n--) {
       let consumerId = yield addClient()
       yield addToRoom(consumerId)
     }
     console.log('added!')
-  })()
+  })(function (err) {
+    if (err) console.error(err)
+  })
 }
 
 exports.clear = function () {
-  for (let key in clients) clients[key].connection.emit('close')
+  for (let key in clients) clients[key].close()
 }
 
 function addToRoom (consumerId) {
@@ -45,22 +47,23 @@ var delCount = 0
 function addClient () {
   return function (callback) {
     var token = producer.signAuth({userId: Consumer.genUserId()})
-    var client = new Consumer.MiniWebSocket(host, token)
-    client.connection
-      .once('error', function (err) {
-        console.error('error:', this.id, err)
-        callback(err)
-      })
-      .once('open', function () {
-        console.log('connected:', addCount++, this.id)
-        client.id = this.id
-        clients[this.id] = client
-        callback(null, this.id)
-      })
-      .once('close', function () {
-        console.log('close:', delCount++, client.id)
-        delete clients[client.id]
-        client.disconnect()
+    var client = new Consumer(host, {
+      path: '/websocket',
+      token: token
+    })
+
+    client.onopen = function () {
+      console.log('connected:', addCount++, this.consumerId)
+      clients[this.consumerId] = client
+      callback(null, this.consumerId)
+    }
+    client.onclose = function () {
+      console.log('close:', delCount++, client.consumerId)
+      delete clients[client.consumerId]
+    }
+    client.connect()
+      .connection.once('close', function () {
+        client.close()
       })
   }
 }
