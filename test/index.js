@@ -526,12 +526,12 @@ describe('snapper2', function () {
           .get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
           .expect(function (res) {
             var info = res.body.stats
-            assert.strictEqual(info.total.producerMessages > 100000, true)
-            assert.strictEqual(info.total.consumerMessages > 100000 * 20, true)
-            assert.strictEqual(info.total.consumers > 20, true)
-            assert.strictEqual(info.total.rooms > 20, true)
+            assert.strictEqual(info.total.producerMessages >= 100000, true)
+            assert.strictEqual(info.total.consumerMessages >= 100000 * 20, true)
+            assert.strictEqual(info.total.consumers >= 20, true)
+            assert.strictEqual(info.total.rooms >= 20, true)
 
-            assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`], '20')
+            assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 20, true)
           })
 
         yield req.end.bind(req)
