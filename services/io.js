@@ -46,10 +46,12 @@ exports.updateConsumer = function (consumerId) {
   redis.client.expire(genQueueId(consumerId), expires)(tools.logErr)
 }
 
-// by ws, clear consumer's message queue
-exports.removeConsumer = function (consumerId) {
-  debug('removeConsumer:', consumerId)
-  redis.client.del(genQueueId(consumerId))(tools.logErr)
+// by ws, weaken consumer's message queue
+// 削减消息队列的生存期，如果客户端已失去链接，则消息队列在 5 分钟后被移除
+// 若客户端依然保持了链接，则生存期能被还原
+exports.weakenConsumer = function (consumerId) {
+  debug('weakenConsumer:', consumerId)
+  redis.client.expire(genQueueId(consumerId), 300)(tools.logErr)
 }
 
 // by rpc, add consumer to room

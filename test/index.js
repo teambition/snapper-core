@@ -245,6 +245,24 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
+    it('echo request', function (callback) {
+      var token = producer.signAuth({userId: Consumer.genUserId()})
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
+      consumer.onerror = function () {
+        assert.strictEqual('Should not run', true)
+      }
+      consumer.onclose = callback
+      consumer.request('echo', [1, 2, 3], function (err, res) {
+        assert.strictEqual(err == null, true)
+        assert.deepEqual(res, [1, 2, 3])
+        consumer.close()
+      })
+      consumer.connect()
+    })
+
     it('receive message in order', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
@@ -480,7 +498,7 @@ describe('snapper2', function () {
             consumer.message = function (message) {
               if (message === null) {
                 assert.deepEqual(received, messages)
-                this.close()
+                done()
               } else {
                 received.push(message)
                 if (!index && (received.length % 10000) === 0) process.stdout.write('.')
@@ -490,7 +508,7 @@ describe('snapper2', function () {
               console.error(err)
               done(err)
             }
-            consumer.onclose = done
+            // consumer.onclose = done
           }))
         })
 

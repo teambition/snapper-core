@@ -39,7 +39,9 @@ module.exports = function (app) {
     .on('connection', function (socket) {
       var session = socket.request.session
       debug('connected: %s', socket.id, session)
-      if (session.prevId) io.removeConsumer(session.prevId)
+      // 前一消息队列可能失效，削减其生存期，使其尽快失效
+      // 若连接未失效，则 heartbeat 时间能将消息队列生存期还原
+      if (session.prevId) io.weakenConsumer(session.prevId)
       // init consumer's message queue if not exist
       io.addConsumer(socket.id)
 
@@ -56,6 +58,9 @@ module.exports = function (app) {
         .on('heartbeat', onHeartbeat)
         .on('message', onMessage)
         .on('error', app.onerror)
+        .once('close', function () {
+          stats.setConsumersStats(wsServer.clientsCount)
+        })
 
     })
 
@@ -110,11 +115,15 @@ function onHeartbeat () {
 
 function onMessage (data) {
   debug('message: %s', this.id, data)
-  if (!this.pendingRPC) return
-
   var res = jsonrpc.parse(data)
-  if (res.payload.id !== this.pendingRPC.id) return
+  if (res.type === 'request') {
+    // echo client request
+    // for test
+    let data = JSON.stringify(jsonrpc.success(res.payload.id, res.payload.params))
+    return this.send(data)
+  }
 
+  if (!this.pendingRPC || res.payload.id !== this.pendingRPC.id) return
   if (res.type === 'success') {
     this.pendingRPC.callback(null, res.payload.result)
   } else {
