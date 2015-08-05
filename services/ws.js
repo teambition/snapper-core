@@ -38,16 +38,18 @@ module.exports = function (app) {
     .on('error', app.onerror)
     .on('connection', function (socket) {
       var session = socket.request.session
-      debug('connected: %s', socket.id, session)
+      var consumerId = socket.id
+      debug('connected: %s', consumerId, session)
       // 前一消息队列可能失效，削减其生存期，使其尽快失效
       // 若连接未失效，则 heartbeat 时间能将消息队列生存期还原
       if (session.prevId) io.weakenConsumer(session.prevId)
       // init consumer's message queue if not exist
-      io.addConsumer(socket.id)
+      io.addConsumer(consumerId)
+      io.addUserConsumer(session.userId, consumerId)
 
       // bind consumer to user's room
       // a user may have one more consumer's thread
-      io.joinRoom(`user${session.userId}`, socket.id)(function (err) {
+      io.joinRoom(`user${session.userId}`, consumerId)(function (err) {
         if (err) return socket.end()
         // update stats
         stats.incrConsumers(1)
@@ -59,6 +61,7 @@ module.exports = function (app) {
         .on('message', onMessage)
         .on('error', app.onerror)
         .once('close', function () {
+          io.removeUserConsumer(session.userId, consumerId)
           stats.setConsumersStats(wsServer.clientsCount)
         })
 

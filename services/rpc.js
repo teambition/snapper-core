@@ -3,6 +3,7 @@
 const net = require('net')
 const Bufsp = require('bufsp')
 const config = require('config')
+const thunk = require('thunks')()
 const jsonrpc = require('jsonrpc-lite')
 const debug = require('debug')('snapper:rpc')
 
@@ -74,8 +75,19 @@ module.exports = function (app) {
       return socket.end(socket.bufsp.encode(JSON.stringify(res)))
     }
 
-    if (!handleRPC(socket, res.payload)) return socket.end()
-
+    // params: [tokenxxx]
+    try {
+      socket.token = app.verifyToken(res.payload.params[0])
+      // producer token should have producerId, to different from consumer auth
+      if (!validString(socket.token.producerId)) throw new Error('invalid signature')
+      socket.id = tools.md5(res.payload.params[0])
+      socket.producerId = socket.token.producerId
+      res = jsonrpc.success(res.payload.id, {id: socket.id})
+      socket.write(socket.bufsp.encode(JSON.stringify(res)))
+    } catch (err) {
+      res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError(err.message, 400))
+      return socket.end(socket.bufsp.encode(JSON.stringify(res)))
+    }
     // ready to listen
     socket.invalidRequestCount = 0
     server.clients[socket.id] = socket
@@ -88,8 +100,8 @@ module.exports = function (app) {
     var socket = this.socket
     debug('message:', socket.producerId, message)
 
-    var res = jsonrpc.parse(message)
-    if (res.type !== 'request') {
+    var req = jsonrpc.parse(message)
+    if (req.type !== 'request') {
       app.onerror(new Error(`Receive a unhandle message: ${message}`))
       socket.invalidRequestCount++
       if (socket.invalidRequestCount > 100) {
@@ -98,11 +110,21 @@ module.exports = function (app) {
       return
     }
 
-    handleRPC(socket, res.payload)
+    thunk(handleRPC(socket, req.payload))(function (err, res) {
+      debug('response:', req.payload.id, err, res)
+      var data = null
+      if (err) {
+        if (!(err instanceof jsonrpc.JsonRpcError)) {
+          err = new jsonrpc.JsonRpcError(String(err), 500)
+        }
+        data = jsonrpc.error(req.payload.id, err)
+      } else data = jsonrpc.success(req.payload.id, res == null ? 'OK' : res)
+
+      socket.write(socket.bufsp.encode(JSON.stringify(data)))
+    })
   }
 
-  function handleRPC (socket, data) {
-    var res = null
+  function * handleRPC (socket, data) {
     switch (data.method) {
       case 'publish':
         // params: [
@@ -120,56 +142,31 @@ module.exports = function (app) {
         }
         stats.incrProducerMessages(count)
         if (socket.invalidRequestCount) socket.invalidRequestCount--
-        res = jsonrpc.success(data.id, count)
-        socket.write(socket.bufsp.encode(JSON.stringify(res)))
-        break
+        return count
 
       case 'subscribe':
         // params: [room, consumerId]
-        if (validString(data.params[0]) && validString(data.params[1])) {
-          io.joinRoom(data.params[0], data.params[1])(function (err, res) {
-            if (err) res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(String(err), 500))
-            else res = jsonrpc.success(data.id, res)
-            socket.write(socket.bufsp.encode(JSON.stringify(res)))
-          })
+        if (!validString(data.params[0]) || !validString(data.params[1])) {
+          throw jsonrpc.JsonRpcError.invalidParams()
         }
-        break
+        return yield io.joinRoom(data.params[0], data.params[1])
 
       case 'unsubscribe':
         // params: [room, consumerId]
-        if (validString(data.params[0]) && validString(data.params[1])) {
-          io.leaveRoom(data.params[0], data.params[1])(function (err, res) {
-            if (err) res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(String(err), 500))
-            else res = jsonrpc.success(data.id, res)
-            socket.write(socket.bufsp.encode(JSON.stringify(res)))
-          })
+        if (!validString(data.params[0]) || !validString(data.params[1])) {
+          throw jsonrpc.JsonRpcError.invalidParams()
         }
-        break
+        return yield io.leaveRoom(data.params[0], data.params[1])
 
-      case 'auth':
-        // params: [tokenxxx]
-        try {
-          socket.token = app.verifyToken(data.params[0])
-          // producer token should have producerId, to different from consumer auth
-          if (!validString(socket.token.producerId)) throw new Error('invalid signature')
-          socket.id = tools.md5(data.params[0])
-          socket.producerId = socket.token.producerId
-          res = jsonrpc.success(data.id, {id: socket.id})
-          socket.write(socket.bufsp.encode(JSON.stringify(res)))
-        } catch (err) {
-          res = jsonrpc.error(data.id, new jsonrpc.JsonRpcError(err.message, 400))
-          socket.write(socket.bufsp.encode(JSON.stringify(res)))
-          return false
+      case 'consumers':
+        // params: [userId]
+        if (!validString(data.params[0])) {
+          throw jsonrpc.JsonRpcError.invalidParams()
         }
-        break
-
-      default:
-        socket.invalidRequestCount++
-        res = jsonrpc.error(data.id, jsonrpc.JsonRpcError.methodNotFound())
-        socket.write(socket.bufsp.encode(JSON.stringify(res)))
+        return yield io.getUserConsumers(data.params[0])
     }
-
-    return true
+    socket.invalidRequestCount++
+    throw jsonrpc.JsonRpcError.methodNotFound()
   }
 }
 

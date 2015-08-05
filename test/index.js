@@ -114,24 +114,23 @@ describe('snapper2', function () {
         producerId: ++producerId + ''
       })
 
-      assert.throws(function () {
-        producer.joinRoom('room', 123)
-      })
-      assert.throws(function () {
-        producer.joinRoom(123, 123)
-      })
-      assert.throws(function () {
-        producer.leaveRoom('room', '')
-      })
-
       producer
         .on('error', callback)
         .on('close', callback)
 
+      // should work will callback style or thunk style
       producer.joinRoom = thunk.thunkify(producer.joinRoom)
-      producer.leaveRoom = thunk.thunkify(producer.leaveRoom)
+      // producer.leaveRoom = thunk.thunkify(producer.leaveRoom)
 
-      thunk(function *() {
+      thunk(producer.joinRoom('room', 123))(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+        return producer.joinRoom(123, 123)
+      })(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+        return producer.joinRoom('room', '')
+      })(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+      })(function *() {
         var res = yield producer.joinRoom('test', '1')
         assert.strictEqual(res, 1)
 
@@ -143,6 +142,61 @@ describe('snapper2', function () {
       })(function (err) {
         if (err) return callback(err)
         producer.close()
+      })
+    })
+
+    it('request', function (callback) {
+      var producer = new Producer(config.rpcPort, {
+        secretKeys: config.tokenSecret,
+        producerId: ++producerId + ''
+      })
+
+      producer
+        .on('error', callback)
+        .on('close', callback)
+
+      thunk(producer.request('get', 123))(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+        assert.strictEqual(err.message, 'Invalid params')
+        return producer.request('get', [])
+      })(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+        assert.strictEqual(err.message, 'Method not found')
+        return producer.request('consumers', [])
+      })(function (err, res) {
+        assert.strictEqual(err instanceof Error, true)
+        assert.strictEqual(err.message, 'Invalid params')
+        return producer.request('consumers', ['userIdxxx'])
+      })(function (err, res) {
+        assert.strictEqual(err, null)
+        assert.deepEqual(res, [])
+
+        return function (done) {
+          var host = '127.0.0.1:' + config.port
+          var userId = Consumer.genUserId()
+          var token = producer.signAuth({userId: userId})
+          var consumer = new Consumer(host, {
+            path: '/websocket',
+            token: token
+          })
+          consumer.onerror = function () {
+            assert.strictEqual('Should not run', true)
+          }
+          consumer.onopen = function () {
+            this.userId = userId
+            done(null, this)
+          }
+          consumer.connect()
+        }
+      })(function (err, consumer) {
+        assert.strictEqual(err, null)
+        assert.strictEqual(consumer instanceof Consumer, true)
+        return producer.request('consumers', [consumer.userId])(function (err, res) {
+          assert.strictEqual(err, null)
+          assert.deepEqual(res, [consumer.consumerId])
+          consumer.close()
+          producer.close()
+        })
       })
     })
 
@@ -263,6 +317,60 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
+    it('update user consumer state', function (callback) {
+      var userId = Consumer.genUserId()
+
+      function addConsumer (id) {
+        return function (done) {
+          var token = producer.signAuth({userId: userId, id: id})
+          var consumer = new Consumer(host, {
+            path: '/websocket',
+            token: token
+          })
+          consumer.onerror = function () {
+            assert.strictEqual('Should not run', true)
+          }
+          consumer.onopen = function () {
+            done(null, this)
+          }
+          consumer.connect()
+        }
+      }
+
+      thunk(function *() {
+        var consumerIds = null
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds, [])
+
+        let consumer1 = yield addConsumer(1)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds, [consumer1.consumerId])
+
+        let consumer2 = yield addConsumer(2)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId].sort())
+
+        let consumer3 = yield addConsumer(3)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId, consumer3.consumerId].sort())
+
+        consumer2.close()
+        yield thunk.delay(100)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer3.consumerId].sort())
+
+        consumer1.close()
+        yield thunk.delay(100)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds, [consumer3.consumerId])
+
+        consumer3.close()
+        yield thunk.delay(100)
+        consumerIds = yield producer.request('consumers', [userId])
+        assert.deepEqual(consumerIds, [])
+      })(callback)
+    })
+
     it('receive message in order', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
@@ -309,9 +417,8 @@ describe('snapper2', function () {
       var res = []
 
       consumer.onopen = function () {
-        producer
-          .joinRoom('test', consumer.consumerId)
-          .sendMessage('test', JSON.stringify({
+        producer.joinRoom('test', consumer.consumerId)()
+        producer.sendMessage('test', JSON.stringify({
             e: 'update',
             d: 0
           }))
@@ -364,9 +471,8 @@ describe('snapper2', function () {
       var res = []
 
       consumer.onopen = function () {
-        producer
-          .joinRoom('test', consumer.consumerId)
-          .sendMessage('test', JSON.stringify(1))
+        producer.joinRoom('test', consumer.consumerId)()
+        producer.sendMessage('test', JSON.stringify(1))
           .sendMessage('test', JSON.stringify(2))
           .sendMessage('test', JSON.stringify(3))
           .sendMessage('test', JSON.stringify(4))
@@ -475,7 +581,6 @@ describe('snapper2', function () {
           app.connectRPC()
         })
       }
-
     })
 
     it('100000 messages to 20 consumers', function (callback) {

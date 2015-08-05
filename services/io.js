@@ -127,6 +127,32 @@ exports.pullMessage = function (consumerId) {
   })
 }
 
+exports.addUserConsumer = function (userId, consumerId) {
+  var userKey = genUserStateId(userId)
+  debug('addUserConsumer:', userId, consumerId)
+  return redis.client.sadd(userKey, consumerId)(function *(err, res) {
+    if (err) {
+      res = (yield [
+        redis.client.del(userKey),
+        redis.client.sadd(userKey, consumerId)
+      ])[1]
+    }
+    // stale room will be del after 172800 sec
+    yield redis.client.expire(userKey, 172800)
+    return res
+  })
+}
+
+exports.removeUserConsumer = function (userId, consumerId) {
+  debug('removeUserConsumer:', userId, consumerId)
+  return redis.client.srem(genUserStateId(userId), consumerId)(tools.logErr)
+}
+
+exports.getUserConsumers = function (userId) {
+  debug('getUserConsumers:', userId)
+  return redis.client.smembers(genUserStateId(userId))
+}
+
 // List, consumer's message queue key
 function genQueueId (consumerId) {
   return `${redisPrefix}:L:${consumerId}`
@@ -135,4 +161,9 @@ function genQueueId (consumerId) {
 // Set, room's key
 function genRoomId (room) {
   return `${redisPrefix}:S:${room}`
+}
+
+// Set, room's key
+function genUserStateId (userId) {
+  return `${redisPrefix}:U:${userId}`
 }

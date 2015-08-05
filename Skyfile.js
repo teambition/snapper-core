@@ -42,7 +42,7 @@ sneaky('snapper2:dev', function () {
 
   // Execute after transporting files to server and link to the current directory
   // This script will be executed through ssh command
-  this.after('npm install && npm test && pm2 gracefulReload snapper-dev')
+  // this.after('npm install && npm test && pm2 gracefulReload snapper-dev')
 
   // Normally, sneaky will create a new directory for each deployment
   // If you do not need this feature, set `overwrite` to true
