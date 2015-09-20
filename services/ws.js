@@ -25,7 +25,8 @@ module.exports = function (app) {
         req.session.id = tools.base64ID(token)
       } catch (err) {
         debug('handshake unauthorized: %s', err)
-        return callback(3, false) // 'Bad request'
+        // Bad request.
+        return callback(3, false)
       }
 
       var prevId = (req.headers.cookie || '').match(/snapper\.ws=([0-9a-zA-Z~_-]{24})/)
@@ -40,18 +41,18 @@ module.exports = function (app) {
       var session = socket.request.session
       var consumerId = socket.id
       debug('connected: %s', consumerId, session)
-      // 前一消息队列可能失效，削减其生存期，使其尽快失效
-      // 若连接未失效，则 heartbeat 时间能将消息队列生存期还原
+      // Weaken previous message queue's lifetime to boost its expiration.
+      // heartbeat time will restore its lifetime if connection is still valid.
       if (session.prevId) io.weakenConsumer(session.prevId)
-      // init consumer's message queue if not exist
+      // Initialize consumer's message queue if it does not exist.
       io.addConsumer(consumerId)
       io.addUserConsumer(session.userId, consumerId)
 
-      // bind consumer to user's room
-      // a user may have one more consumer's thread
+      // Bind a consumer to a specified user's room.
+      // A user may have one or more consumer's threads.
       io.joinRoom(`user${session.userId}`, consumerId)(function (err) {
         if (err) return socket.end()
-        // update stats
+        // Update consumer's stats.
         stats.incrConsumers(1)
         stats.setConsumersStats(wsServer.clientsCount)
       })
@@ -120,8 +121,7 @@ function onMessage (data) {
   debug('message: %s', this.id, data)
   var res = jsonrpc.parse(data)
   if (res.type === 'request') {
-    // echo client request
-    // for test
+    // Echo client requests for testing purposes.
     let data = JSON.stringify(jsonrpc.success(res.payload.id, res.payload.params))
     return this.send(data)
   }

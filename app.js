@@ -50,17 +50,18 @@ toaToken(app, config.tokenSecret, {
   expiresInSeconds: config.expires,
   getToken: function () {
     if (this.method !== 'GET') return
-    return this.query.token // GET 请求同时允许 Authorization header 和 Signature query
+    // GET requests permits both authorization headers and signature query.
+    return this.query.token
   }
 })
 
 /**
- * 启动服务
+ * Start up service.
  */
 app.listen(config.instancePort, config.backlog)
 app.connectRPC()
 app.connectWS()
-// pm2 gracefulReload
+// The server is finally closed and exit gracefully when all connections are ended.
 pm(app, function (msg) {
   if (msg !== 'shutdown') return
   app.context.rpc.close(function () {

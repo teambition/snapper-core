@@ -12,11 +12,14 @@ const tools = require('./tools')
 const stats = require('./stats')
 const probeIps = Object.create(null)
 
+const DEFT_MAX_PROBE_IPS_NUM = 5
+const DEFT_MAX_INVALID_REQ_NUM = 100
+
 module.exports = function (app) {
   var server = net.createServer(function (socket) {
     debug('connection:', socket.remoteAddress, socket.remotePort)
-    // filter invalid socket, such as probe socket from Server Load Balancer
-    if (!socket.remoteAddress || !socket.remotePort || probeIps[socket.remoteAddress] > 5) {
+    // Filter invalid socket (i.e. probe socket from Server Load Balancer).
+    if (!socket.remoteAddress || !socket.remotePort || probeIps[socket.remoteAddress] > DEFT_MAX_PROBE_IPS_NUM) {
       socket.on('error', noOp)
       return
     }
@@ -78,7 +81,7 @@ module.exports = function (app) {
     // params: [tokenxxx]
     try {
       socket.token = app.verifyToken(res.payload.params[0])
-      // producer token should have producerId, to different from consumer auth
+      // Producer token should have producerId to be different from consumer auth.
       if (!validString(socket.token.producerId)) throw new Error('invalid signature')
       socket.id = tools.md5(res.payload.params[0])
       socket.producerId = socket.token.producerId
@@ -88,10 +91,10 @@ module.exports = function (app) {
       res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError(err.message, 400))
       return socket.end(socket.bufsp.encode(JSON.stringify(res)))
     }
-    // ready to listen
+    // Socket is ready to listen.
     socket.invalidRequestCount = 0
     server.clients[socket.id] = socket
-    // it is not probe socket
+    // Remove the record as it is not a probe socket.
     delete probeIps[socket.remoteAddress]
     this.on('data', onData)
   }
@@ -104,24 +107,24 @@ module.exports = function (app) {
     if (req.type !== 'request') {
       app.onerror(new Error(`Receive a unhandle message: ${message}`))
       socket.invalidRequestCount++
-      if (socket.invalidRequestCount > 100) {
+      if (socket.invalidRequestCount > DEFT_MAX_INVALID_REQ_NUM) {
         socket.end(socket.bufsp.encode(new Error('excessive invalid requests')))
       }
-      return
-    }
-
-    thunk(handleRPC(socket, req.payload))(function (err, res) {
-      debug('response:', req.payload.id, err, res)
-      var data = null
-      if (err) {
-        if (!(err instanceof jsonrpc.JsonRpcError)) {
-          err = new jsonrpc.JsonRpcError(String(err), 500)
+    } else {
+      thunk(handleRPC(socket, req.payload))(function (err, res) {
+        debug('response:', req.payload.id, err, res)
+        var data = null
+        if (err) {
+          if (!(err instanceof jsonrpc.JsonRpcError)) {
+            err = new jsonrpc.JsonRpcError(String(err), 500)
+          }
+          data = jsonrpc.error(req.payload.id, err)
+        } else {
+          data = jsonrpc.success(req.payload.id, res == null ? 'OK' : res)
         }
-        data = jsonrpc.error(req.payload.id, err)
-      } else data = jsonrpc.success(req.payload.id, res == null ? 'OK' : res)
-
-      socket.write(socket.bufsp.encode(JSON.stringify(data)))
-    })
+        socket.write(socket.bufsp.encode(JSON.stringify(data)))
+      })
+    }
   }
 
   function * handleRPC (socket, data) {

@@ -86,16 +86,6 @@ describe('snapper2', function () {
         producerId: ++producerId + ''
       })
 
-      assert.throws(function () {
-        producer.sendMessage('room', 123)
-      })
-      assert.throws(function () {
-        producer.sendMessage(123, 123)
-      })
-      assert.throws(function () {
-        producer.sendMessage('room', '')
-      })
-
       var count = 0
       producer
         .on('jsonrpc', function (obj) {
@@ -419,29 +409,29 @@ describe('snapper2', function () {
       consumer.onopen = function () {
         producer.joinRoom('test', consumer.consumerId)()
         producer.sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: 0
-          }))
-          .sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: '0'
-          }))
-          .sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: false
-          }))
-          .sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: {}
-          }))
-          .sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: []
-          }))
-          .sendMessage('test', JSON.stringify({
-            e: 'update',
-            d: null
-          }))
+          e: 'update',
+          d: 0
+        }))
+        .sendMessage('test', JSON.stringify({
+          e: 'update',
+          d: '0'
+        }))
+        .sendMessage('test', JSON.stringify({
+          e: 'update',
+          d: false
+        }))
+        .sendMessage('test', JSON.stringify({
+          e: 'update',
+          d: {}
+        }))
+        .sendMessage('test', JSON.stringify({
+          e: 'update',
+          d: []
+        }))
+        .sendMessage('test', JSON.stringify({
+          e: 'update',
+          d: null
+        }))
       }
 
       consumer.message = function (message) {
