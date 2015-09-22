@@ -39,7 +39,7 @@
     "gulp-mocha": "^2.1.3",
     "gulp-sequence": "^0.4.0",
     "mocha": "^2.2.5",
-    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git#v0.5.0",
+    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git#v0.6.0",
     "snapper2-consumer": "git+ssh://git@code.teambition.com:components/snapper2-consumer.git#v0.2.3",
     "supertest": "^1.0.1",
     "standard": "^5.0.0",

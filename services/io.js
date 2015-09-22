@@ -11,6 +11,10 @@ const redisPrefix = config.redisPrefix
 const expires = config.redisQueueExpires
 const messageChannel = `${redisPrefix}:message`
 
+const DEFT_MESSAGE_QUEUE_EXP = 60 * 5
+const DEFT_ROOM_EXP = 3600 * 24 * 2
+const DEFT_NUM_MESSAGES_TO_PULL = 20
+
 redis.clientSub
   .on('message', function (channel, consumerIds) {
     if (channel !== messageChannel) return
@@ -23,13 +27,13 @@ redis.clientSub
   })
   .subscribe(messageChannel)(tools.logErr)
 
-// should replace by ws' clients
+// Replace by ws' clients.
 exports.consumers = {}
 
-// by ws, add consumer's message queue
+// Add consumer's message queue via ws.
 exports.addConsumer = function (consumerId) {
   var queueId = genQueueId(consumerId)
-  // init messages queue
+  // Initialize message queue.
   debug('addConsumer:', consumerId)
   redis.client.lindex(queueId, 0)(function *(err, res) {
     var initTask = []
@@ -46,15 +50,15 @@ exports.updateConsumer = function (consumerId) {
   redis.client.expire(genQueueId(consumerId), expires)(tools.logErr)
 }
 
-// by ws, weaken consumer's message queue
-// 削减消息队列的生存期，如果客户端已失去链接，则消息队列在 5 分钟后被移除
-// 若客户端依然保持了链接，则生存期能被还原
+// Weaken consumer's message queue lifetime via ws.
+// Consumer's message queue will be removed in 5 minutes since connection lost.
+// Consumer's message queue lifetime will be restored if connection is valid.
 exports.weakenConsumer = function (consumerId) {
   debug('weakenConsumer:', consumerId)
-  redis.client.expire(genQueueId(consumerId), 300)(tools.logErr)
+  redis.client.expire(genQueueId(consumerId), DEFT_MESSAGE_QUEUE_EXP)(tools.logErr)
 }
 
-// by rpc, add consumer to room
+// Add a consumer to a specified room via rpc.
 exports.joinRoom = function (room, consumerId) {
   var roomId = genRoomId(room)
   debug('joinRoom:', room, consumerId)
@@ -65,52 +69,54 @@ exports.joinRoom = function (room, consumerId) {
         redis.client.sadd(roomId, consumerId)
       ])[1]
     }
-    // stale room will be del after 172800 sec
-    yield redis.client.expire(roomId, 172800)
+    // Stale room will expire after 172800 seconds.
+    yield redis.client.expire(roomId, DEFT_ROOM_EXP)
     stats.addRoomsHyperlog(room)
     return res
   })
 }
 
-// by rpc, remove consumer from room
+// Remove a consumer from a specified room via rpc.
 exports.leaveRoom = function (room, consumerId) {
   debug('leaveRoom:', room, consumerId)
-
   return redis.client.srem(genRoomId(room), consumerId)
 }
 
-// for test
+// For testing purposes.
 exports.clearRoom = function *(room) {
   debug('clearRoom:', room)
   return yield redis.client.del(genRoomId(room))
 }
 
-// by rpc, push messages to redis queue
-// exports.pushMessage = function(consumerId, message) {
-//   debug('pushMessage:', consumerId, message)
-//
-//   redis.client.rpushx(genQueueId(consumerId), message)(function(err, res) {
-//     if (err !== null) throw err
-//     // trigger pullMessage
-//     return redis.client.publish(messageChannel, consumerId)
-//   })(tools.logErr)
-// }
+// TODO: push messages to redis queue via rpc.
+/* exports.pushMessage = function(consumerId, message) {
+   debug('pushMessage:', consumerId, message)
 
-// by rpc, broadcast messages to redis queue
+   redis.client.rpushx(genQueueId(consumerId), message)(function(err, res) {
+     if (err !== null) throw err
+     // trigger pullMessage
+     return redis.client.publish(messageChannel, consumerId)
+   })(tools.logErr)
+ }
+*/
+
+// Broadcast messages to redis queue via rpc.
 exports.broadcastMessage = function (room, message) {
   debug('broadcastMessage:', room, message)
   redis.client.evalsha(redis.broadcastLuaSHA, 1, genRoomId(room), message)(tools.logErr)
 }
 
-// to consumer, auto pull messages from redis queue
+// Automatically pull messages from redis queue to a customer.
 exports.pullMessage = function (consumerId) {
   var socket = exports.consumers[consumerId]
   if (!socket || socket.ioPending) return
 
   socket.ioPending = true
   var queueId = genQueueId(consumerId)
-  // 一次批量发送最多 20 条消息，index 0 为占位消息（`'1'` 或上一次的已读消息），空 list 会被自动删除。
-  redis.client.lrange(queueId, 1, 20)(function *(err, messages) {
+  // Pull at most 20 messages at a time.
+  // A placeholder message is at index 0 (`'1'` or last unread message).
+  // Empty list will be removed automatically.
+  redis.client.lrange(queueId, 1, DEFT_NUM_MESSAGES_TO_PULL)(function *(err, messages) {
     if (err) throw err
     if (!messages.length) return
 
@@ -137,8 +143,8 @@ exports.addUserConsumer = function (userId, consumerId) {
         redis.client.sadd(userKey, consumerId)
       ])[1]
     }
-    // stale room will be del after 172800 sec
-    yield redis.client.expire(userKey, 172800)
+    // Stale room will be removed after 172800 sec.
+    yield redis.client.expire(userKey, DEFT_ROOM_EXP)
     return res
   })
 }
@@ -153,17 +159,17 @@ exports.getUserConsumers = function (userId) {
   return redis.client.smembers(genUserStateId(userId))
 }
 
-// List, consumer's message queue key
+// Key for consumer's message queue.
 function genQueueId (consumerId) {
   return `${redisPrefix}:L:${consumerId}`
 }
 
-// Set, room's key
+// Key for a room.
 function genRoomId (room) {
   return `${redisPrefix}:S:${room}`
 }
 
-// Set, room's key
+// Key for a user's state.
 function genUserStateId (userId) {
   return `${redisPrefix}:U:${userId}`
 }
