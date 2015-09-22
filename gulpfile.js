@@ -6,7 +6,7 @@ var mocha = require('gulp-mocha')
 
 gulp.task('mocha', function () {
   return gulp.src('test/index.js', {read: false})
-    .pipe(mocha({timeout: 100000}))
+    .pipe(mocha({timeout: 300000}))
 })
 
 gulp.task('exit', function (callback) {

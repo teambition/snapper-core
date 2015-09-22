@@ -1,6 +1,11 @@
-snapper
+snapper v0.15.0
 ====
 Teambition message service, based on Redis.
+
+[![Build Status][travis-image]][travis-url]
+
+![snapper-architecture](https://raw.githubusercontent.com/teambition/snapper/master/docs/architecture.png)
+![snapper-process](https://raw.githubusercontent.com/teambition/snapper/master/docs/process.png)
 
 ### dependencies
 
@@ -31,3 +36,6 @@ var token = snapperProducer.signAuth({name: 'snapper'});
 ```bash
 NODE_ENV=production node bin/token
 ```
+
+[travis-url]: https://travis-ci.org/teambition/snapper
+[travis-image]: http://img.shields.io/travis/teambition/snapper.svg
