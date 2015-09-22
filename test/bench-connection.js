@@ -3,7 +3,7 @@
 
 const config = require('config')
 const thunk = require('thunks')()
-const Producer = require('snapper2-producer')
+const Producer = require('snapper-producer')
 
 const Consumer = require('./lib/consumer')
 

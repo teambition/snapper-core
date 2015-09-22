@@ -1,49 +1,49 @@
 {
-  "name": "snapper2",
-  "description": "Teambition message server, based on Redis.",
+  "name": "snapper",
+  "description": "Teambition message service, based on Redis.",
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "0.14.0",
+  "version": "0.15.0",
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git@code.teambition.com:server/snapper2.git"
+    "url": "git@github.com:teambition/snapper.git"
   },
   "engines": {
     "node": ">=1.2.0"
   },
-  "homepage": "https://code.teambition.com/server/snapper2",
+  "homepage": "https://github.com/teambition/snapper",
   "keywords": [
     "message",
     "server"
   ],
   "dependencies": {
     "bufsp": "^1.0.2",
-    "config": "~1.15.0",
+    "config": "~1.16.0",
     "debug": "^2.2.0",
     "engine.io": "git://github.com/teambition/engine.io.git#v1.5.4",
     "http-errors": "~1.3.1",
     "jsonrpc-lite": "^1.1.0",
     "jws": "^3.1.0",
-    "thunk-redis": "^0.11.0",
-    "thunks": "^3.5.0",
-    "toa": "^0.13.0",
+    "thunk-redis": "^1.0.0",
+    "thunks": "^3.5.1",
+    "toa": "^1.0.0",
     "toa-pm": "^0.2.0",
-    "toa-router": "^1.1.1",
+    "toa-router": "^1.1.2",
     "toa-token": "^1.2.0"
   },
   "devDependencies": {
-    "engine.io-client": "^1.5.2",
+    "engine.io-client": "^1.5.4",
     "gulp": "^3.9.0",
     "gulp-mocha": "^2.1.3",
-    "gulp-sequence": "^0.4.0",
-    "mocha": "^2.2.5",
-    "snapper2-producer": "git+ssh://git@code.teambition.com:server/snapper2-producer.git#v0.6.0",
-    "snapper2-consumer": "git+ssh://git@code.teambition.com:components/snapper2-consumer.git#v0.2.3",
-    "supertest": "^1.0.1",
-    "standard": "^5.0.0",
-    "thunk-queue": "^0.1.1"
+    "gulp-sequence": "^0.4.1",
+    "mocha": "^2.3.3",
+    "snapper-producer": "^0.6.1",
+    "snapper-consumer": "^0.2.4",
+    "supertest": "^1.1.0",
+    "standard": "^5.3.1",
+    "thunk-queue": "^0.1.2"
   },
   "scripts": {
     "start": "NODE_ENV=development node app.js",

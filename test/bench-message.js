@@ -4,7 +4,7 @@
 const config = require('config')
 const thunk = require('thunks')()
 const ThunkQueue = require('thunk-queue')
-const Producer = require('snapper2-producer')
+const Producer = require('snapper-producer')
 
 const io = require('../services/io')
 const tools = require('../services/tools')

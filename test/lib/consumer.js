@@ -1,7 +1,7 @@
 'use strict'
 
 const crypto = require('crypto')
-const Consumer = require('snapper2-consumer')
+const Consumer = require('snapper-consumer')
 
 module.exports = Consumer
 Consumer.genUserId = genUserId

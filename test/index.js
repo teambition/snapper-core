@@ -6,7 +6,7 @@ const assert = require('assert')
 const thunk = require('thunks')()
 const request = require('supertest')
 const ThunkQueue = require('thunk-queue')
-const Producer = require('snapper2-producer')
+const Producer = require('snapper-producer')
 
 const app = require('../app')
 const redis = require('../services/redis')

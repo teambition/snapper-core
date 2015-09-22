@@ -1,6 +1,6 @@
-snapper2
+snapper
 ====
-Teambition message server, based on Redis.
+Teambition message service, based on Redis.
 
 ### dependencies
 
@@ -26,7 +26,7 @@ var token = snapperProducer.signAuth({name: 'snapper'});
 ```
 `{name: 'snapper'}` 为必须参数
 
-或者直接在 snapper2 下运行（确保 config 中的 `tokenSecret` 正确）
+或者直接在 snapper 下运行（确保 config 中的 `tokenSecret` 正确）
 
 ```bash
 NODE_ENV=production node bin/token
