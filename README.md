@@ -7,6 +7,9 @@ Teambition message service, based on Redis.
 ![snapper-architecture](https://raw.githubusercontent.com/teambition/snapper/master/docs/architecture.png)
 ![snapper-process](https://raw.githubusercontent.com/teambition/snapper/master/docs/process.png)
 
+## Snapper-producer https://github.com/teambition/snapper-producer
+## Snapper-consumer https://github.com/teambition/snapper-consumer
+
 ### dependencies
 
 - redis
@@ -37,5 +40,5 @@ var token = snapperProducer.signAuth({name: 'snapper'});
 NODE_ENV=production node bin/token
 ```
 
-[travis-url]: https://travis-ci.org/teambition/snapper
-[travis-image]: http://img.shields.io/travis/teambition/snapper.svg
+[travis-url]: https://travis-ci.org/teambition/snapper-core
+[travis-image]: http://img.shields.io/travis/teambition/snapper-core.svg

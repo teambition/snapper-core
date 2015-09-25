@@ -1,37 +1,41 @@
 {
-  "name": "snapper",
-  "description": "Teambition message service, based on Redis.",
+  "name": "snapper-core",
+  "description": "Teambition message service, backed by redis.",
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "0.15.0",
+  "version": "0.16.0",
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:teambition/snapper.git"
+    "url": "git@github.com:teambition/snapper-core.git"
   },
   "engines": {
     "node": ">=1.2.0"
   },
-  "homepage": "https://github.com/teambition/snapper",
+  "homepage": "https://github.com/teambition/snapper-core",
   "keywords": [
     "message",
-    "server"
+    "distributed",
+    "websocket",
+    "socket",
+    "redis",
+    "teambition"
   ],
   "dependencies": {
-    "bufsp": "^1.0.2",
+    "bufsp": "~1.0.2",
     "config": "~1.16.0",
-    "debug": "^2.2.0",
+    "debug": "~2.2.0",
     "engine.io": "git://github.com/teambition/engine.io.git#v1.5.4",
     "http-errors": "~1.3.1",
-    "jsonrpc-lite": "^1.1.0",
-    "jws": "^3.1.0",
-    "thunk-redis": "^1.0.0",
+    "jsonrpc-lite": "~1.1.0",
+    "jws": "~3.1.0",
+    "thunk-redis": "~1.0.0",
     "thunks": "^3.5.1",
-    "toa": "^1.0.0",
-    "toa-pm": "^0.2.0",
-    "toa-router": "^1.1.2",
-    "toa-token": "^1.2.0"
+    "toa": "~1.0.0",
+    "toa-pm": "~0.2.0",
+    "toa-router": "~1.1.2",
+    "toa-token": "~1.2.0"
   },
   "devDependencies": {
     "engine.io-client": "^1.5.4",
