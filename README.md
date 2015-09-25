@@ -2,10 +2,11 @@ snapper v0.15.0
 ====
 Teambition message service, based on Redis.
 
+[![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
 
-![snapper-architecture](https://raw.githubusercontent.com/teambition/snapper/master/docs/architecture.png)
-![snapper-process](https://raw.githubusercontent.com/teambition/snapper/master/docs/process.png)
+![snapper-architecture](https://raw.githubusercontent.com/teambition/snapper-core/master/docs/architecture.png)
+![snapper-process](https://raw.githubusercontent.com/teambition/snapper-core/master/docs/process.png)
 
 ## Snapper-producer https://github.com/teambition/snapper-producer
 ## Snapper-consumer https://github.com/teambition/snapper-consumer
@@ -39,6 +40,9 @@ var token = snapperProducer.signAuth({name: 'snapper'});
 ```bash
 NODE_ENV=production node bin/token
 ```
+
+[npm-url]: https://npmjs.org/package/snapper-core
+[npm-image]: http://img.shields.io/npm/v/snapper-core.svg
 
 [travis-url]: https://travis-ci.org/teambition/snapper-core
 [travis-image]: http://img.shields.io/travis/teambition/snapper-core.svg
