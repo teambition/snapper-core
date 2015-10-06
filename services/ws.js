@@ -9,7 +9,7 @@ const io = require('./io')
 const tools = require('./tools')
 const stats = require('./stats')
 
-const TIMEOUT = 60 * 1000
+const TIMEOUT = 100 * 1000
 
 module.exports = function (app) {
   var wsServer = new engine.Server({
@@ -91,11 +91,11 @@ function RpcCommand (socket, messages, callback) {
   var ctx = this
   this.id = ++socket.rpcId
   this.socket = socket
-  this._callback = callback
+  this.callback = callback
 
   this.data = JSON.stringify(jsonrpc.request(this.id, 'publish', messages))
   this.timer = setTimeout(function () {
-    ctx.callback(new Error(`Send messages time out, socketId ${socket.id}, rpcId ${ctx.id}`))
+    ctx.done(new Error(`Send messages time out, socketId ${socket.id}, rpcId ${ctx.id}`))
   }, TIMEOUT)
 }
 
@@ -107,8 +107,8 @@ RpcCommand.prototype.clear = function () {
   return true
 }
 
-RpcCommand.prototype.callback = function (err, res) {
-  if (this.clear()) this._callback(err, res)
+RpcCommand.prototype.done = function (err, res) {
+  if (this.clear()) this.callback(err, res)
 }
 
 function onHeartbeat () {
@@ -127,8 +127,8 @@ function onMessage (data) {
 
   if (!this.pendingRPC || res.payload.id !== this.pendingRPC.id) return
   if (res.type === 'success') {
-    this.pendingRPC.callback(null, res.payload.result)
+    this.pendingRPC.done(null, res.payload.result)
   } else {
-    this.pendingRPC.callback(res.payload.error || res.payload)
+    this.pendingRPC.done(res.payload.error || res.payload)
   }
 }

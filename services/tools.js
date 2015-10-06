@@ -2,7 +2,7 @@
 
 const util = require('util')
 const crypto = require('crypto')
-const createError = require('http-errors')
+// const createError = require('http-errors')
 
 exports.log = function (err) {
   // For debug purposes.
@@ -26,14 +26,6 @@ function logErr (err) {
   if (err == null || (err.status && err.status < 500)) return
   if (!util.isError(err)) logInfo('Non-Error throw', err)
   else console.error(`\n${timestamp()} - ${err.toString()}`, `\n${err.stack}`)
-}
-
-exports.throw = function () {
-  throw createError.apply(null, arguments)
-}
-
-exports.createError = function () {
-  return createError.apply(null, arguments)
 }
 
 exports.md5 = function (buffer) {

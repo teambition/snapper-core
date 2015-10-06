@@ -16,16 +16,14 @@ const Consumer = require('./lib/consumer')
 var producerId = 0
 
 describe('snapper2', function () {
-  before(function (callback) {
-    redis.client.flushall()(callback)
+  before(function *() {
+    yield redis.client.flushall()
   })
 
-  after(function (callback) {
-    thunk(function *() {
-      yield redis.client.flushall()
-      yield thunk.delay(1000)
-      process.emit('message', 'shutdown')
-    })(callback)
+  after(function *() {
+    yield redis.client.flushall()
+    yield thunk.delay(1000)
+    process.emit('message', 'shutdown')
   })
 
   describe('rpc', function () {
@@ -249,9 +247,8 @@ describe('snapper2', function () {
         .on('connect', callback)
     })
 
-    after(function (callback) {
+    after(function () {
       producer.close()
-      callback()
     })
 
     it('connect:Unauthorized', function (callback) {
@@ -306,7 +303,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('update user consumer state', function (callback) {
+    it('update user consumer state', function *() {
       var userId = Consumer.genUserId()
 
       function addConsumer (id) {
@@ -326,38 +323,36 @@ describe('snapper2', function () {
         }
       }
 
-      thunk(function *() {
-        var consumerIds = null
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds, [])
+      var consumerIds = null
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds, [])
 
-        let consumer1 = yield addConsumer(1)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds, [consumer1.consumerId])
+      let consumer1 = yield addConsumer(1)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds, [consumer1.consumerId])
 
-        let consumer2 = yield addConsumer(2)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId].sort())
+      let consumer2 = yield addConsumer(2)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId].sort())
 
-        let consumer3 = yield addConsumer(3)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId, consumer3.consumerId].sort())
+      let consumer3 = yield addConsumer(3)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId, consumer3.consumerId].sort())
 
-        consumer2.close()
-        yield thunk.delay(100)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer3.consumerId].sort())
+      consumer2.close()
+      yield thunk.delay(100)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer3.consumerId].sort())
 
-        consumer1.close()
-        yield thunk.delay(100)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds, [consumer3.consumerId])
+      consumer1.close()
+      yield thunk.delay(100)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds, [consumer3.consumerId])
 
-        consumer3.close()
-        yield thunk.delay(100)
-        consumerIds = yield producer.request('consumers', [userId])
-        assert.deepEqual(consumerIds, [])
-      })(callback)
+      consumer3.close()
+      yield thunk.delay(100)
+      consumerIds = yield producer.request('consumers', [userId])
+      assert.deepEqual(consumerIds, [])
     })
 
     it('receive message in order', function (callback) {
@@ -572,7 +567,7 @@ describe('snapper2', function () {
       }
     })
 
-    it('100000 messages to 20 consumers', function (callback) {
+    it('100000 messages to 20 consumers', function *() {
       var consumers = []
       var messages = []
       while (messages.length < 100000) messages.push(messages.length)
@@ -583,71 +578,67 @@ describe('snapper2', function () {
         }))
       }
 
-      thunk(function *() {
-        // 注册 consumers 消息处理器
-        var thunkQueue = ThunkQueue()
-        consumers.forEach(function (consumer, index) {
-          var received = []
-          thunkQueue.push(thunk(function (done) {
-            consumer.message = function (message) {
-              if (message === null) {
-                assert.deepEqual(received, messages)
-                done()
-              } else {
-                received.push(message)
-                if (!index && (received.length % 10000) === 0) process.stdout.write('.')
-              }
+      // 注册 consumers 消息处理器
+      var thunkQueue = ThunkQueue()
+      consumers.forEach(function (consumer, index) {
+        var received = []
+        thunkQueue.push(thunk(function (done) {
+          consumer.message = function (message) {
+            if (message === null) {
+              assert.deepEqual(received, messages)
+              done()
+            } else {
+              received.push(message)
+              if (!index && (received.length % 10000) === 0) process.stdout.write('.')
             }
-            consumer.onerror = function (err) {
-              console.error(err)
-              done(err)
-            }
-            // consumer.onclose = done
-          }))
+          }
+          consumer.onerror = function (err) {
+            console.error(err)
+            done(err)
+          }
+          // consumer.onclose = done
+        }))
+      })
+
+      // 等待 consumers 连接并加入 chaos room
+      yield consumers.map(function (consumer) {
+        return thunk(function (done) {
+          consumer.onopen = function () {
+            producer.joinRoom('chaos', consumer.consumerId, done)
+          }
+          consumer.connect()
         })
+      })
 
-        // 等待 consumers 连接并加入 chaos room
-        yield consumers.map(function (consumer) {
-          return thunk(function (done) {
-            consumer.onopen = function () {
-              producer.joinRoom('chaos', consumer.consumerId, done)
-            }
-            consumer.connect()
-          })
+      // 开始发送消息
+      var _messages = messages.slice()
+      while (_messages.length) {
+        let random = Math.ceil(Math.random() * 100)
+        // 等待 random 毫秒
+        yield thunk.delay(random)
+        // 并发发送 10 * random  条消息
+        let todo = _messages.splice(0, random * 10)
+        // console.log('send:', todo.length, 'left:', _messages.length)
+        while (todo.length) producer.sendMessage('chaos', JSON.stringify(todo.shift()))
+        process.stdout.write('.')
+      }
+      producer.sendMessage('chaos', JSON.stringify(null))
+
+      // 等待 consumers 所有消息处理完毕
+      yield thunkQueue.end()
+
+      // get stats
+      yield request(app.server)
+        .get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
+        .expect(function (res) {
+          var info = res.body.stats
+          assert.strictEqual(info.total.producerMessages >= 100000, true)
+          assert.strictEqual(info.total.consumerMessages >= 100000 * 20, true)
+          assert.strictEqual(info.total.consumers >= 20, true)
+          assert.strictEqual(info.total.rooms >= 20, true)
+
+          assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 20, true)
         })
-
-        // 开始发送消息
-        var _messages = messages.slice()
-        while (_messages.length) {
-          let random = Math.ceil(Math.random() * 100)
-          // 等待 random 毫秒
-          yield thunk.delay(random)
-          // 并发发送 10 * random  条消息
-          let todo = _messages.splice(0, random * 10)
-          // console.log('send:', todo.length, 'left:', _messages.length)
-          while (todo.length) producer.sendMessage('chaos', JSON.stringify(todo.shift()))
-          process.stdout.write('.')
-        }
-        producer.sendMessage('chaos', JSON.stringify(null))
-
-        // 等待 consumers 所有消息处理完毕
-        yield thunkQueue.end()
-
-        // get stats
-        var req = request(app.server)
-          .get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
-          .expect(function (res) {
-            var info = res.body.stats
-            assert.strictEqual(info.total.producerMessages >= 100000, true)
-            assert.strictEqual(info.total.consumerMessages >= 100000 * 20, true)
-            assert.strictEqual(info.total.consumers >= 20, true)
-            assert.strictEqual(info.total.rooms >= 20, true)
-
-            assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 20, true)
-          })
-
-        yield req.end.bind(req)
-      })(callback)
     })
   })
 })

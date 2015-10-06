@@ -12,29 +12,18 @@ const rpc = require('./services/rpc')
 const tools = require('./services/tools')
 const stats = require('./services/stats')
 
-const app = Toa(function *() {
+const app = module.exports = Toa(function *() {
   debug('http request:', this.method, this.url, this.ip)
 
   var res = null
-  var token = null
-  if (this.path === '/stats') {
-    try {
-      token = this.token
-      if (token.userId) token = token.name === 'snapper' && token
-    } catch (e) {
-      token = null
-    }
-  }
-  if (token) {
+  if (this.path === '/stats' && validToken(this)) {
     res = stats.os()
     res.stats = yield stats.clientsStats()
-  } else {
-    res = {
-      server: packageInfo.name,
-      version: packageInfo.version
-    }
   }
-  this.body = res
+  this.body = res || {
+    server: packageInfo.name,
+    version: packageInfo.version
+  }
 })
 
 config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0)
@@ -71,11 +60,17 @@ pm(app, function (msg) {
   })
 })
 
-module.exports = app
-
 tools.logInfo('start', {
   listen: config.instancePort,
   rpcPort: config.rpcPort,
   serverId: stats.serverId,
   appConfig: app.config
 })
+
+function validToken (ctx) {
+  try {
+    var token = ctx.token
+    if (token && token.name === 'snapper') return token
+  } catch (e) {}
+  return null
+}

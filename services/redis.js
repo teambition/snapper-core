@@ -5,8 +5,8 @@ const config = require('config')
 const redis = require('thunk-redis')
 const tools = require('./tools')
 
-const client = redis.createClient(config.redis.port, config.redis.host)
-const clientSub = redis.createClient(config.redis.port, config.redis.host)
+const client = redis.createClient(config.redis.hosts, config.redis.options)
+const clientSub = redis.createClient(config.redis.hosts, config.redis.options)
 const consumersLua = stripBOM(fs.readFileSync(process.cwd() + '/lua/consumers.lua', {encoding: 'utf8'}))
 
 client

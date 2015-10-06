@@ -23,7 +23,7 @@ redis.clientSub
     debug('message:', channel, consumerIds)
 
     consumerIds = consumerIds.split(',')
-    for (var i = 0; i < consumerIds.length; i++) exports.pullMessage(consumerIds[i])
+    for (var i = 0; i < consumerIds.length; i++) pullMessage(consumerIds[i])
   })
   .subscribe(messageChannel)(tools.logErr)
 
@@ -43,7 +43,7 @@ exports.addConsumer = function (consumerId) {
     tasks.push(redis.client.expire(queueKey, expires))
     yield tasks
 
-    exports.pullMessage(consumerId)
+    pullMessage(consumerId)
   })(tools.logErr)
 }
 
@@ -100,7 +100,7 @@ exports.broadcastMessage = function (room, message) {
         // Weaken non-exists consumer, it will be removed in next cycle unless it being added again.
         if (!+res) return redis.client.hincrby(roomKey, consumerId, -1)
         if (res) {
-          if (exports.consumers[consumerId]) exports.pullMessage(consumerId)
+          if (exports.consumers[consumerId]) pullMessage(consumerId)
           else otherConsumers.push(consumerId)
         }
       })(tools.logErr)
@@ -110,34 +110,6 @@ exports.broadcastMessage = function (room, message) {
       yield redis.client.publish(messageChannel, otherConsumers.join(','))
     }
   })()
-}
-
-// Automatically pull messages from redis queue to a customer.
-exports.pullMessage = function (consumerId) {
-  var socket = exports.consumers[consumerId]
-  if (!socket || socket.ioPending) return
-
-  socket.ioPending = true
-  var queueKey = genQueueKey(consumerId)
-  // Pull at most 20 messages at a time.
-  // A placeholder message is at index 0 (`'1'` or last unread message).
-  // Empty list will be removed automatically.
-  redis.client.lrange(queueKey, 1, DEFT_NUM_MESSAGES_TO_PULL)(function *(err, messages) {
-    if (err) throw err
-    if (!messages.length) return
-
-    debug('pullMessage:', consumerId, messages)
-    yield socket.sendMessages(messages)
-    // messages have been send to consumer, remove them from queue.
-    yield redis.client.ltrim(queueKey, messages.length, -1)
-    stats.incrConsumerMessages(messages.length)
-
-    return true
-  })(function (err, res) {
-    socket.ioPending = false
-    if (err !== null) tools.logErr(err)
-    else if (res === true) exports.pullMessage(consumerId)
-  })
 }
 
 exports.addUserConsumer = function (userId, consumerId) {
@@ -158,6 +130,34 @@ exports.removeUserConsumer = function (userId, consumerId) {
 exports.getUserConsumers = function (userId) {
   debug('getUserConsumers:', userId)
   return redis.client.smembers(genUserStateKey(userId))
+}
+
+// Automatically pull messages from redis queue to a customer.
+function pullMessage (consumerId) {
+  var socket = exports.consumers[consumerId]
+  if (!socket || socket.ioPending) return
+
+  socket.ioPending = true
+  var queueKey = genQueueKey(consumerId)
+  // Pull at most 20 messages at a time.
+  // A placeholder message is at index 0 (`'1'` or last unread message).
+  // Because empty list will be removed automatically.
+  redis.client.lrange(queueKey, 1, DEFT_NUM_MESSAGES_TO_PULL)(function *(err, messages) {
+    if (err) throw err
+    if (!messages.length) return
+
+    debug('pullMessage:', consumerId, messages)
+    yield socket.sendMessages(messages)
+    // messages have been send to consumer, remove them from queue.
+    yield redis.client.ltrim(queueKey, messages.length, -1)
+    stats.incrConsumerMessages(messages.length)
+
+    return true
+  })(function (err, res) {
+    socket.ioPending = false
+    if (err !== null) tools.logErr(err)
+    else if (res === true) pullMessage(consumerId)
+  })
 }
 
 // Key for consumer's message queue. It is a List

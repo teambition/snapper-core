@@ -1,6 +1,6 @@
-snapper v0.15.0
+snapper
 ====
-Teambition message service, based on Redis.
+Teambition push messaging service, based on redis.
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
@@ -20,6 +20,8 @@ Teambition message service, based on Redis.
 ### install
 
 ```bash
+git clone https://github.com/teambition/snapper-core.git
+cd snapper-core
 npm install --production
 ```
 
