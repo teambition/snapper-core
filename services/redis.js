@@ -18,9 +18,6 @@ client
     })
   })
   .on('error', tools.logErr)
-  .on('warn', function (err) {
-    tools.logInfo('thunk-redis', err)
-  })
   .on('close', function (hadErr) {
     if (hadErr) return tools.logErr(hadErr)
   })
@@ -28,10 +25,8 @@ client
 exports.client = client
 exports.clientSub = clientSub
 
-var luaSHA = null
 exports.getConsumers = function *(roomKey) {
-  if (!luaSHA) luaSHA = yield client.script('load', consumersLua)
-  return client.evalsha(luaSHA, 1, roomKey)
+  return client.evalauto(consumersLua, 1, roomKey)
 }
 
 function stripBOM (content) {

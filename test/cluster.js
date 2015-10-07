@@ -17,7 +17,7 @@ const Consumer = require('./lib/consumer')
 
 var producerId = 0
 
-describe('snapper on redis-cluster', function () {
+describe('snapper on redis cluster', function () {
   var producer = null
   var host = '127.0.0.1:' + config.port
 
@@ -43,11 +43,13 @@ describe('snapper on redis-cluster', function () {
       .once('connect', callback)
   })
 
-  it('100000 messages to 20 consumers', function *() {
+  it('10000 messages, 200 rooms, 50 consumers', function *() {
     var consumers = []
     var messages = []
-    while (messages.length < 100000) messages.push(messages.length)
-    while (consumers.length < 20) {
+    var rooms = []
+    while (messages.length < 10000) messages.push(messages.length)
+    while (rooms.length < 200) rooms.push('room' + rooms.length)
+    while (consumers.length < 50) {
       consumers.push(new Consumer(host, {
         path: '/websocket',
         token: producer.signAuth({userId: Consumer.genUserId()})
@@ -61,18 +63,16 @@ describe('snapper on redis-cluster', function () {
       thunkQueue.push(thunk(function (done) {
         consumer.message = function (message) {
           if (message === null) {
+            // 不同的 room 不能保证时序
+            received.sort(function (a, b) { return a - b })
+            // if (JSON.stringify(received) !== JSON.stringify(messages)) console.log(JSON.stringify(received))
             assert.deepEqual(received, messages)
             done()
           } else {
             received.push(message)
-            if (!index && (received.length % 10000) === 0) process.stdout.write('.')
           }
         }
-        consumer.onerror = function (err) {
-          console.error(err)
-          done(err)
-        }
-        // consumer.onclose = done
+        consumer.onerror = done
       }))
     })
 
@@ -80,7 +80,9 @@ describe('snapper on redis-cluster', function () {
     yield consumers.map(function (consumer) {
       return thunk(function (done) {
         consumer.onopen = function () {
-          producer.joinRoom('chaos', consumer.consumerId, done)
+          thunk.all(rooms.map(function (room) {
+            return producer.joinRoom(room, consumer.consumerId)
+          }))(done)
         }
         consumer.connect()
       })
@@ -88,17 +90,19 @@ describe('snapper on redis-cluster', function () {
 
     // 开始发送消息
     var _messages = messages.slice()
+    var room = rooms[0]
     while (_messages.length) {
-      let random = Math.ceil(Math.random() * 100)
+      let random = Math.ceil(Math.random() * 200)
       // 等待 random 毫秒
       yield thunk.delay(random)
-      // 并发发送 10 * random  条消息
-      let todo = _messages.splice(0, random * 10)
-      // console.log('send:', todo.length, 'left:', _messages.length)
-      while (todo.length) producer.sendMessage('chaos', JSON.stringify(todo.shift()))
+      // 并发发送 random  条消息
+      let todo = _messages.splice(0, random)
+      room = rooms[random] || rooms[0]
+      while (todo.length) producer.sendMessage(room, JSON.stringify(todo.shift()))
       process.stdout.write('.')
     }
-    producer.sendMessage('chaos', JSON.stringify(null))
+    yield thunk.delay(1000)
+    producer.sendMessage(room, JSON.stringify(null))
 
     // 等待 consumers 所有消息处理完毕
     yield thunkQueue.end()
