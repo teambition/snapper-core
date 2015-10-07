@@ -48,9 +48,9 @@
     "thunk-queue": "^0.1.2"
   },
   "scripts": {
-    "start": "NODE_ENV=development node app.js",
-    "test": "standard & mocha -t 300000 -r thunk-mocha test/index.js",
-    "test-cluster": "mocha -t 300000 -r thunk-mocha test/cluster.js"
+    "start": "node app.js",
+    "test": "standard & mocha -t 400000 -r thunk-mocha test/index.js",
+    "test-cluster": "mocha -t 400000 -r thunk-mocha test/cluster.js"
   },
   "ignore": [
     "**/.*",
