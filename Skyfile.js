@@ -1,11 +1,11 @@
 'use strict'
 /*global sneaky*/
 
-sneaky('snapper2:pro', function () {
+sneaky('snapper-core:pro', function () {
   this.description = 'Deploy to production environment'
   this.user = 'jarvis'
-  this.host = '112.124.19.227'
-  this.path = '/teambition/server/snapper'
+  this.host = '120.26.54.108'
+  this.path = '/teambition/server/snapper-core'
   this.filter = `
 + config/d*
 - config/*

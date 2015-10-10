@@ -41,10 +41,10 @@
     "engine.io-client": "^1.5.4",
     "mocha": "^2.3.3",
     "snapper-consumer": "^1.0.0",
-    "snapper-producer": "^1.0.0",
+    "snapper-producer": "^1.0.1",
     "standard": "^5.3.1",
     "supertest": "^1.1.0",
-    "thunk-mocha": "^0.1.1",
+    "thunk-mocha": "^1.0.0",
     "thunk-queue": "^0.1.2"
   },
   "scripts": {
