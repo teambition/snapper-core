@@ -11,8 +11,11 @@ const network = JSON.stringify(os.networkInterfaces())
   .map(function (ip) { return ip.slice(11, -1) })
 
 const serverId = tools.md5(JSON.stringify(network))
+// Hash
 const statsKey = `${config.redisPrefix}:STATS`
+// HyperLogLog
 const roomKey = `${config.redisPrefix}:STATS:ROOM`
+// Hash
 const serverKey = `${config.redisPrefix}:STATS:SERVERS`
 
 exports.serverId = serverId
