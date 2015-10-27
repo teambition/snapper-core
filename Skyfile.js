@@ -20,7 +20,7 @@ sneaky('snapper-core:pro', function () {
   this.nochdir = true
 })
 
-sneaky('snapper2:dev', function () {
+sneaky('snapper-core:dev', function () {
   // Description show in `sneaky -T`
   this.description = 'Deploy to test environment'
   this.user = 'iojs'

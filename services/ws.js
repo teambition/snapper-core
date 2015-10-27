@@ -58,7 +58,13 @@ module.exports = function (app) {
       })
 
       socket
-        .on('heartbeat', onHeartbeat)
+        .on('heartbeat', function () {
+          debug('heartbeat: %s', this.id)
+          io.updateConsumer(this.id)
+          // if clients dont have socket, but socker is connected, close it!
+          // this happened in firefox, just close it so that brower will reconnect server.
+          if (!wsServer.clients[this.id]) this.close()
+        })
         .on('message', onMessage)
         .on('error', app.onerror)
         .once('close', function () {
@@ -109,11 +115,6 @@ RpcCommand.prototype.clear = function () {
 
 RpcCommand.prototype.done = function (err, res) {
   if (this.clear()) this.callback(err, res)
-}
-
-function onHeartbeat () {
-  debug('heartbeat: %s', this.id)
-  io.updateConsumer(this.id)
 }
 
 function onMessage (data) {

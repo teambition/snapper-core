@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -31,7 +31,7 @@
     "jsonrpc-lite": "~1.1.0",
     "jws": "~3.1.0",
     "thunk-redis": "~1.1.1",
-    "thunks": "^3.5.1",
+    "thunks": "^3.5.2",
     "toa": "~1.0.1",
     "toa-pm": "~0.2.0",
     "toa-router": "~1.1.2",
