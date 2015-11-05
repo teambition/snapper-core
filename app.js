@@ -9,7 +9,7 @@ const debug = require('debug')('snapper')
 const packageInfo = require('./package.json')
 const ws = require('./services/ws')
 const rpc = require('./services/rpc')
-const tools = require('./services/tools')
+const ilog = require('./services/log')
 const stats = require('./services/stats')
 
 const app = module.exports = Toa(function *() {
@@ -27,6 +27,8 @@ const app = module.exports = Toa(function *() {
 })
 
 config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0)
+
+app.onerror = ilog.error
 
 app.connectRPC = function () {
   this.context.rpc = rpc(this)
@@ -60,7 +62,7 @@ pm(app, function (msg) {
   })
 })
 
-tools.logInfo('start', {
+ilog.info({
   listen: config.instancePort,
   rpcPort: config.rpcPort,
   serverId: stats.serverId,

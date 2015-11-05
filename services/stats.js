@@ -3,6 +3,7 @@
 const os = require('os')
 const config = require('config')
 
+const ilog = require('ilog')
 const redis = require('./redis')
 const tools = require('./tools')
 
@@ -33,23 +34,23 @@ exports.os = function () {
 }
 
 exports.incrProducerMessages = function (count) {
-  redis.client.hincrby(statsKey, 'producerMessages', count)(tools.logErr)
+  redis.client.hincrby(statsKey, 'producerMessages', count)(ilog.error)
 }
 
 exports.incrConsumerMessages = function (count) {
-  redis.client.hincrby(statsKey, 'consumerMessages', count)(tools.logErr)
+  redis.client.hincrby(statsKey, 'consumerMessages', count)(ilog.error)
 }
 
 exports.incrConsumers = function (count) {
-  redis.client.hincrby(statsKey, 'consumers', count)(tools.logErr)
+  redis.client.hincrby(statsKey, 'consumers', count)(ilog.error)
 }
 
 exports.addRoomsHyperlog = function (roomId) {
-  redis.client.pfadd(roomKey, roomId)(tools.logErr)
+  redis.client.pfadd(roomKey, roomId)(ilog.error)
 }
 
 exports.setConsumersStats = function (consumers) {
-  redis.client.hset(serverKey, `${serverId}:${config.instancePort}`, consumers)(tools.logErr)
+  redis.client.hset(serverKey, `${serverId}:${config.instancePort}`, consumers)(ilog.error)
 }
 
 exports.clientsStats = function *() {

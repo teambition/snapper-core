@@ -8,21 +8,15 @@ const jsonrpc = require('jsonrpc-lite')
 const debug = require('debug')('snapper:rpc')
 
 const io = require('./io')
+const ilog = require('./log')
 const tools = require('./tools')
 const stats = require('./stats')
-const probeIps = Object.create(null)
 
-const DEFT_MAX_PROBE_IPS_NUM = 5
 const DEFT_MAX_INVALID_REQ_NUM = 100
 
 module.exports = function (app) {
   var server = net.createServer(function (socket) {
     debug('connection:', socket.remoteAddress, socket.remotePort)
-    // Filter invalid socket (i.e. probe socket from Server Load Balancer).
-    if (!socket.remoteAddress || !socket.remotePort || probeIps[socket.remoteAddress] > DEFT_MAX_PROBE_IPS_NUM) {
-      socket.on('error', noOp)
-      return
-    }
 
     socket.bufsp = new Bufsp({
       encoding: 'utf8',
@@ -47,17 +41,22 @@ module.exports = function (app) {
     this.close(callback)
   }
 
-  server.on('error', app.onerror)
+  server.on('error', function (error) {
+    ilog.emergency(error)
+    // the application should restart if error occured
+    throw error
+  })
   server.listen(config.rpcPort)
   return server
 
   function onSocketError (err) {
+    this.destroy()
     if (err.code === 'ECONNRESET') {
+      // Filter invalid socket (i.e. probe socket from Server Load Balancer).
       debug('probe connection:', this.remoteAddress, err)
-      probeIps[this.remoteAddress] = (probeIps[this.remoteAddress] || 0) + 1
       return
     }
-    app.onerror(err)
+    ilog.error(err)
   }
 
   function onSocketClose () {
@@ -94,8 +93,6 @@ module.exports = function (app) {
     // Socket is ready to listen.
     socket.invalidRequestCount = 0
     server.clients[socket.id] = socket
-    // Remove the record as it is not a probe socket.
-    delete probeIps[socket.remoteAddress]
     this.on('data', onData)
   }
 
@@ -176,5 +173,3 @@ module.exports = function (app) {
 function validString (str) {
   return str && typeof str === 'string'
 }
-
-function noOp () {}

@@ -3,7 +3,8 @@
 const fs = require('fs')
 const config = require('config')
 const redis = require('thunk-redis')
-const tools = require('./tools')
+
+const ilog = require('./log')
 
 const client = redis.createClient(config.redis.hosts, config.redis.options)
 const clientSub = redis.createClient(config.redis.hosts, config.redis.options)
@@ -11,15 +12,16 @@ const consumersLua = stripBOM(fs.readFileSync(process.cwd() + '/lua/consumers.lu
 
 client
   .on('connect', function () {
-    tools.logInfo('thunk-redis', {
+    ilog.info({
       redisHost: config.redis.port,
       redisPort: config.redis.host,
-      message: 'connected'
+      message: 'thunk-redis connected'
     })
   })
-  .on('error', tools.logErr)
-  .on('close', function (hadErr) {
-    if (hadErr) return tools.logErr(hadErr)
+  .on('error', function (error) {
+    ilog.emergency(error)
+    // the application should restart if error occured
+    throw error
   })
 
 exports.client = client

@@ -31,3 +31,4 @@ debug
 .DS_Store
 
 config/development.json
+config/production.json

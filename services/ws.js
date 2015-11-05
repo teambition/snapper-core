@@ -6,6 +6,7 @@ const jsonrpc = require('jsonrpc-lite')
 const debug = require('debug')('snapper:ws')
 
 const io = require('./io')
+const ilog = require('ilog')
 const tools = require('./tools')
 const stats = require('./stats')
 
@@ -36,7 +37,11 @@ module.exports = function (app) {
   })
 
   wsServer
-    .on('error', app.onerror)
+    .on('error', function (error) {
+      ilog.emergency(error)
+      // the application should restart if error occured
+      throw error
+    }) // should not be listened
     .on('connection', function (socket) {
       var session = socket.request.session
       var consumerId = socket.id
@@ -60,13 +65,13 @@ module.exports = function (app) {
       socket
         .on('heartbeat', function () {
           debug('heartbeat: %s', this.id)
-          io.updateConsumer(this.id)
           // if clients dont have socket, but socker is connected, close it!
           // this happened in firefox, just close it so that brower will reconnect server.
           if (!wsServer.clients[this.id]) this.close()
+          else io.updateConsumer(this.id)
         })
         .on('message', onMessage)
-        .on('error', app.onerror)
+        .on('error', ilog.debug) // this error isn't necessary to care
         .once('close', function () {
           io.removeUserConsumer(session.userId, consumerId)
           stats.setConsumersStats(wsServer.clientsCount)

@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "dependencies": {
     "bufsp": {
       "version": "1.0.2",
@@ -146,6 +146,10 @@
         }
       }
     },
+    "ilog": {
+      "version": "1.0.0",
+      "from": "ilog@>=1.0.0 <2.0.0"
+    },
     "jsonrpc-lite": {
       "version": "1.1.0",
       "from": "jsonrpc-lite@>=1.1.0 <1.2.0"
@@ -156,9 +160,9 @@
       "resolved": "https://registry.npmjs.org/jws/-/jws-3.1.0.tgz",
       "dependencies": {
         "base64url": {
-          "version": "1.0.4",
+          "version": "1.0.5",
           "from": "base64url@>=1.0.4 <1.1.0",
-          "resolved": "https://registry.npmjs.org/base64url/-/base64url-1.0.4.tgz",
+          "resolved": "https://registry.npmjs.org/base64url/-/base64url-1.0.5.tgz",
           "dependencies": {
             "concat-stream": {
               "version": "1.4.10",
@@ -331,7 +335,7 @@
     },
     "thunks": {
       "version": "3.5.2",
-      "from": "thunks@>=3.5.1 <4.0.0"
+      "from": "thunks@>=3.5.2 <4.0.0"
     },
     "toa": {
       "version": "1.0.1",
@@ -439,7 +443,7 @@
         },
         "statuses": {
           "version": "1.2.1",
-          "from": "statuses@>=1.0.0 <2.0.0",
+          "from": "statuses@>=1.2.1 <1.3.0",
           "resolved": "https://registry.npmjs.org/statuses/-/statuses-1.2.1.tgz"
         },
         "type-is": {

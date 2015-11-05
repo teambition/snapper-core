@@ -4,10 +4,10 @@ const config = require('config')
 const thunk = require('thunks')()
 const debug = require('debug')('snapper:io')
 
+const ilog = require('./log')
 const redis = require('./redis')
-const tools = require('./tools')
 const stats = require('./stats')
-const thunkE = require('thunks')(tools.logErr) // catch all errors
+const thunkE = require('thunks')(ilog.error) // catch all errors
 
 const redisPrefix = config.redisPrefix
 const expires = config.redisQueueExpires
@@ -25,7 +25,13 @@ redis.clientSub
     consumerIds = consumerIds.split(',')
     for (var i = 0; i < consumerIds.length; i++) pullMessage(consumerIds[i])
   })
-  .subscribe(messageChannel)(tools.logErr)
+  .subscribe(messageChannel)(function (error) {
+    if (error) {
+      ilog.emergency(error)
+      // the application should restart if error occured
+      throw error
+    }
+  })
 
 // Replace by ws' clients.
 exports.consumers = {}
@@ -44,11 +50,11 @@ exports.addConsumer = function (consumerId) {
     yield tasks
 
     pullMessage(consumerId)
-  })(tools.logErr)
+  })(ilog.error)
 }
 
 exports.updateConsumer = function (consumerId) {
-  redis.client.expire(genQueueKey(consumerId), expires)(tools.logErr)
+  redis.client.expire(genQueueKey(consumerId), expires)(ilog.error)
 }
 
 // Weaken consumer's message queue lifetime via ws.
@@ -56,7 +62,7 @@ exports.updateConsumer = function (consumerId) {
 // Consumer's message queue lifetime will be restored if connection is valid.
 exports.weakenConsumer = function (consumerId) {
   debug('weakenConsumer:', consumerId)
-  redis.client.expire(genQueueKey(consumerId), DEFT_MESSAGE_QUEUE_EXP)(tools.logErr)
+  redis.client.expire(genQueueKey(consumerId), DEFT_MESSAGE_QUEUE_EXP)(ilog.error)
 }
 
 // Add a consumer to a specified room via rpc.
@@ -103,13 +109,13 @@ exports.broadcastMessage = function (room, message) {
           if (exports.consumers[consumerId]) pullMessage(consumerId)
           else otherConsumers.push(consumerId)
         }
-      })(tools.logErr)
+      })(ilog.error)
     })
 
     if (otherConsumers.length) {
       yield redis.client.publish(messageChannel, otherConsumers.join(','))
     }
-  })()
+  })(ilog.error)
 }
 
 exports.addUserConsumer = function (userId, consumerId) {
@@ -124,7 +130,7 @@ exports.addUserConsumer = function (userId, consumerId) {
 
 exports.removeUserConsumer = function (userId, consumerId) {
   debug('removeUserConsumer:', userId, consumerId)
-  return redis.client.srem(genUserStateKey(userId), consumerId)(tools.logErr)
+  return redis.client.srem(genUserStateKey(userId), consumerId)(ilog.error)
 }
 
 exports.getUserConsumers = function (userId) {
@@ -155,7 +161,7 @@ function pullMessage (consumerId) {
     return true
   })(function (err, res) {
     socket.ioPending = false
-    if (err !== null) tools.logErr(err)
+    if (err !== null) ilog.error(err)
     else if (res === true) pullMessage(consumerId)
   })
 }
