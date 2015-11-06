@@ -7,7 +7,6 @@ const debug = require('debug')('snapper:io')
 const ilog = require('./log')
 const redis = require('./redis')
 const stats = require('./stats')
-const thunkE = require('thunks')(ilog.error) // catch all errors
 
 const redisPrefix = config.redisPrefix
 const expires = config.redisQueueExpires
@@ -73,7 +72,7 @@ exports.joinRoom = function (room, consumerId) {
     redis.client.hset(roomKey, consumerId, 1),
     // Stale room will be removed after 172800 sec.
     redis.client.expire(roomKey, DEFT_ROOM_EXP)
-  ])(function *(err, res) {
+  ])(function (err, res) {
     if (err) throw err
     stats.addRoomsHyperlog(room)
     return res[0]
@@ -94,7 +93,7 @@ exports.clearRoom = function (room) {
 // Broadcast messages to redis queue
 exports.broadcastMessage = function (room, message) {
   debug('broadcastMessage:', room, message)
-  thunkE(function *() {
+  thunk(function *() {
     var roomKey = genRoomKey(room)
     var consumers = yield redis.getConsumers(roomKey)
     var otherConsumers = []
@@ -121,11 +120,13 @@ exports.broadcastMessage = function (room, message) {
 exports.addUserConsumer = function (userId, consumerId) {
   var userKey = genUserStateKey(userId)
   debug('addUserConsumer:', userId, consumerId)
-  thunkE.all([
+  thunk.all([
     redis.client.sadd(userKey, consumerId),
     // Stale room will be removed after 172800 sec.
     redis.client.expire(userKey, DEFT_ROOM_EXP)
-  ])()
+  ])(ilog.error)
+  // clean stale consumerId
+  checkUserConsumers(userId, consumerId)
 }
 
 exports.removeUserConsumer = function (userId, consumerId) {
@@ -164,6 +165,22 @@ function pullMessage (consumerId) {
     if (err !== null) ilog.error(err)
     else if (res === true) pullMessage(consumerId)
   })
+}
+
+function checkUserConsumers (userId, consumerId) {
+  exports.getUserConsumers(userId)(function *(error, consumers) {
+    if (error) return ilog.error(error)
+    yield consumers.map(function (consumer) {
+      if (consumerId !== consumer) {
+        return function *() {
+          let count = yield redis.client.llen(genQueueKey(consumer))
+          // count is 0 means consumer not exists.
+          // count is great than 1 means consumer is not online, so some messages are not consumed.
+          if (count !== 1) exports.removeUserConsumer(userId, consumer)
+        }
+      }
+    })
+  })(ilog.error)
 }
 
 // Key for consumer's message queue. It is a List

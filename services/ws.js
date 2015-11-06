@@ -44,18 +44,18 @@ module.exports = function (app) {
     }) // should not be listened
     .on('connection', function (socket) {
       var session = socket.request.session
-      var consumerId = socket.id
-      debug('connected: %s', consumerId, session)
+      socket.userId = session.userId
+      debug('connected: %s', socket.id, session)
       // Weaken previous message queue's lifetime to boost its expiration.
       // heartbeat time will restore its lifetime if connection is still valid.
       if (session.prevId) io.weakenConsumer(session.prevId)
       // Initialize consumer's message queue if it does not exist.
-      io.addConsumer(consumerId)
-      io.addUserConsumer(session.userId, consumerId)
+      io.addConsumer(socket.id)
+      io.addUserConsumer(socket.userId, socket.id)
 
       // Bind a consumer to a specified user's room.
       // A user may have one or more consumer's threads.
-      io.joinRoom(`user${session.userId}`, consumerId)(function (err) {
+      io.joinRoom(`user${session.userId}`, socket.id)(function (err) {
         if (err) return socket.end()
         // Update consumer's stats.
         stats.incrConsumers(1)
@@ -65,7 +65,7 @@ module.exports = function (app) {
       socket
         .on('heartbeat', function () {
           debug('heartbeat: %s', this.id)
-          // if clients dont have socket, but socker is connected, close it!
+          // if clients dont have socket, but socket is connected, close it!
           // this happened in firefox, just close it so that brower will reconnect server.
           if (!wsServer.clients[this.id]) this.close()
           else io.updateConsumer(this.id)
@@ -73,7 +73,7 @@ module.exports = function (app) {
         .on('message', onMessage)
         .on('error', ilog.debug) // this error isn't necessary to care
         .once('close', function () {
-          io.removeUserConsumer(session.userId, consumerId)
+          io.removeUserConsumer(this.userId, this.id)
           stats.setConsumersStats(wsServer.clientsCount)
         })
     })
@@ -84,6 +84,7 @@ module.exports = function (app) {
 }
 
 engine.Socket.prototype.rpcId = 0
+engine.Socket.prototype.userId = null
 engine.Socket.prototype.ioPending = false
 engine.Socket.prototype.pendingRPC = null
 engine.Socket.prototype.sendMessages = function (messages) {
