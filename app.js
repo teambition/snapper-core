@@ -15,14 +15,17 @@ const stats = require('./services/stats')
 const app = module.exports = Toa(function *() {
   debug('http request:', this.method, this.url, this.ip)
 
-  var res = null
-  if (this.path === '/stats' && validToken(this)) {
-    res = stats.os()
+  if (this.path === '/stats') {
+    let token = this.token
+    if (token.name !== 'snapper') this.throw(400)
+    let res = stats.os()
     res.stats = yield stats.clientsStats()
-  }
-  this.body = res || {
-    server: packageInfo.name,
-    version: packageInfo.version
+    this.body = res
+  } else {
+    this.body = {
+      server: packageInfo.name,
+      version: packageInfo.version
+    }
   }
 })
 
@@ -68,11 +71,3 @@ ilog.info({
   serverId: stats.serverId,
   appConfig: app.config
 })
-
-function validToken (ctx) {
-  try {
-    var token = ctx.token
-    if (token && token.name === 'snapper') return token
-  } catch (e) {}
-  return null
-}

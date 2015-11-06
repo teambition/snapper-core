@@ -162,7 +162,7 @@ function pullMessage (consumerId) {
     return true
   })(function (err, res) {
     socket.ioPending = false
-    if (err !== null) ilog.error(err)
+    if (err !== null) ilog.debug(err) // this error isn't necessary to care
     else if (res === true) pullMessage(consumerId)
   })
 }

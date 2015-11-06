@@ -71,7 +71,7 @@ module.exports = function (app) {
           else io.updateConsumer(this.id)
         })
         .on('message', onMessage)
-        .on('error', ilog.debug) // this error isn't necessary to care
+        .on('error', ilog.error)
         .once('close', function () {
           io.removeUserConsumer(this.userId, this.id)
           stats.setConsumersStats(wsServer.clientsCount)
