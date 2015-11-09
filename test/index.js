@@ -155,15 +155,15 @@ describe('snapper2', function () {
         assert.strictEqual(err instanceof Error, true)
         assert.strictEqual(err.message, 'Invalid params')
         return producer.request('consumers', ['userIdxxx'])
-      })(function (err, res) {
+      })(function *(err, res) {
         assert.strictEqual(err, null)
         assert.deepEqual(res, [])
 
-        return function (done) {
-          var host = '127.0.0.1:' + config.port
-          var userId = Consumer.genUserId()
-          var token = producer.signAuth({userId: userId})
-          var consumer = new Consumer(host, {
+        let consumer = yield function (done) {
+          let host = '127.0.0.1:' + config.port
+          let userId = Consumer.genUserId()
+          let token = producer.signAuth({userId: userId})
+          let consumer = new Consumer(host, {
             path: '/websocket',
             token: token
           })
@@ -176,16 +176,15 @@ describe('snapper2', function () {
           }
           consumer.connect()
         }
-      })(function (err, consumer) {
-        assert.strictEqual(err, null)
+
         assert.strictEqual(consumer instanceof Consumer, true)
-        return producer.request('consumers', [consumer.userId])(function (err, res) {
-          assert.strictEqual(err, null)
-          assert.deepEqual(res, [consumer.consumerId])
-          consumer.close()
-          producer.close()
-        })
-      })
+
+        yield thunk.delay(200)
+        res = yield producer.request('consumers', [consumer.userId])
+        assert.deepEqual(res, [consumer.consumerId])
+        consumer.close()
+        producer.close()
+      })(callback)
     })
 
     it('reconnecting', function (callback) {
@@ -324,18 +323,22 @@ describe('snapper2', function () {
       }
 
       var consumerIds = null
+      yield thunk.delay(200)
       consumerIds = yield producer.request('consumers', [userId])
       assert.deepEqual(consumerIds, [])
 
       let consumer1 = yield addConsumer(1)
+      yield thunk.delay(200)
       consumerIds = yield producer.request('consumers', [userId])
       assert.deepEqual(consumerIds, [consumer1.consumerId])
 
       let consumer2 = yield addConsumer(2)
+      yield thunk.delay(200)
       consumerIds = yield producer.request('consumers', [userId])
       assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId].sort())
 
       let consumer3 = yield addConsumer(3)
+      yield thunk.delay(200)
       consumerIds = yield producer.request('consumers', [userId])
       assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId, consumer3.consumerId].sort())
 
@@ -366,13 +369,16 @@ describe('snapper2', function () {
 
       consumer.onopen = function () {
         var room = `user${userId}`
-        producer
-          .sendMessage(room, JSON.stringify(1))
-          .sendMessage(room, JSON.stringify(2))
-          .sendMessage(room, JSON.stringify(3))
-          .sendMessage(room, JSON.stringify(4))
-          .sendMessage(room, JSON.stringify(5))
-          .sendMessage(room, JSON.stringify('end'))
+        // wait for consumer join user room!
+        thunk.delay(200)(function () {
+          producer
+            .sendMessage(room, JSON.stringify(1))
+            .sendMessage(room, JSON.stringify(2))
+            .sendMessage(room, JSON.stringify(3))
+            .sendMessage(room, JSON.stringify(4))
+            .sendMessage(room, JSON.stringify(5))
+            .sendMessage(room, JSON.stringify('end'))
+        })
       }
 
       consumer.message = function (message) {
@@ -547,6 +553,8 @@ describe('snapper2', function () {
       consumer.connect()
 
       thunk(function *() {
+        // wait for consumer join user room!
+        yield thunk.delay(500)
         var _messages = messages.slice()
         while (_messages.length) {
           if (_messages.length === 1000) restartServer()

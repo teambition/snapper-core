@@ -50,16 +50,25 @@ module.exports = function (app) {
       // heartbeat time will restore its lifetime if connection is still valid.
       if (session.prevId) io.weakenConsumer(session.prevId)
       // Initialize consumer's message queue if it does not exist.
-      io.addConsumer(socket.id)
-      io.addUserConsumer(socket.userId, socket.id)
-
-      // Bind a consumer to a specified user's room.
-      // A user may have one or more consumer's threads.
-      io.joinRoom(`user${session.userId}`, socket.id)(function (err) {
-        if (err) return socket.end()
+      thunk(function *() {
+        yield io.addConsumer(socket.id)
+        yield [
+          // Bind a consumer to a specified user's room.
+          // A user may have one or more consumer's threads.
+          io.joinRoom(`user${session.userId}`, socket.id),
+          // update user's online consumer
+          io.addUserConsumer(socket.userId, socket.id)
+        ]
+        // start pull message
+        io.pullMessage(socket.id)
         // Update consumer's stats.
         stats.incrConsumers(1)
         stats.setConsumersStats(wsServer.clientsCount)
+      })(function (error) {
+        if (error) {
+          ilog.error(error)
+          return socket.end()
+        }
       })
 
       socket

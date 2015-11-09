@@ -36,20 +36,15 @@ redis.clientSub
 exports.consumers = {}
 
 // Add consumer's message queue via ws.
-exports.addConsumer = function (consumerId) {
-  var queueKey = genQueueKey(consumerId)
+exports.addConsumer = function *(consumerId) {
+  let queueKey = genQueueKey(consumerId)
   // Initialize message queue.
   debug('addConsumer:', consumerId)
-  redis.client.lindex(queueKey, 0)(function *(err, res) {
-    if (err) throw err
-
-    var tasks = []
-    if (!res) tasks.push(redis.client.rpush(queueKey, '1'))
-    tasks.push(redis.client.expire(queueKey, expires))
-    yield tasks
-
-    pullMessage(consumerId)
-  })(ilog.error)
+  let res = yield redis.client.lindex(queueKey, 0)
+  let tasks = []
+  if (!res) tasks.push(redis.client.rpush(queueKey, '1'))
+  tasks.push(redis.client.expire(queueKey, expires))
+  yield tasks
 }
 
 exports.updateConsumer = function (consumerId) {
@@ -65,18 +60,17 @@ exports.weakenConsumer = function (consumerId) {
 }
 
 // Add a consumer to a specified room via rpc.
-exports.joinRoom = function (room, consumerId) {
+exports.joinRoom = function *(room, consumerId) {
   var roomKey = genRoomKey(room)
   debug('joinRoom:', room, consumerId)
-  return thunk.all([
+  let res = yield [
     redis.client.hset(roomKey, consumerId, 1),
     // Stale room will be removed after 172800 sec.
     redis.client.expire(roomKey, DEFT_ROOM_EXP)
-  ])(function (err, res) {
-    if (err) throw err
-    stats.addRoomsHyperlog(room)
-    return res[0]
-  })
+  ]
+
+  stats.addRoomsHyperlog(room)
+  return res[0]
 }
 
 // Remove a consumer from a specified room via rpc.
@@ -117,14 +111,15 @@ exports.broadcastMessage = function (room, message) {
   })(ilog.error)
 }
 
-exports.addUserConsumer = function (userId, consumerId) {
+exports.addUserConsumer = function *(userId, consumerId) {
   var userKey = genUserStateKey(userId)
   debug('addUserConsumer:', userId, consumerId)
-  thunk.all([
+  yield [
     redis.client.sadd(userKey, consumerId),
     // Stale room will be removed after 172800 sec.
     redis.client.expire(userKey, DEFT_ROOM_EXP)
-  ])(ilog.error)
+  ]
+
   // clean stale consumerId
   checkUserConsumers(userId, consumerId)
 }
@@ -140,6 +135,7 @@ exports.getUserConsumers = function (userId) {
 }
 
 // Automatically pull messages from redis queue to a customer.
+exports.pullMessage = pullMessage
 function pullMessage (consumerId) {
   var socket = exports.consumers[consumerId]
   if (!socket || socket.ioPending) return
@@ -169,7 +165,7 @@ function pullMessage (consumerId) {
 
 function checkUserConsumers (userId, consumerId) {
   exports.getUserConsumers(userId)(function *(error, consumers) {
-    if (error) return ilog.error(error)
+    if (error) throw error
     yield consumers.map(function (consumer) {
       if (consumerId !== consumer) {
         return function *() {
