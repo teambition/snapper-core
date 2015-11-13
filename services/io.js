@@ -47,8 +47,11 @@ exports.addConsumer = function *(consumerId) {
   yield tasks
 }
 
-exports.updateConsumer = function (consumerId) {
-  redis.client.expire(genQueueKey(consumerId), expires)(ilog.error)
+exports.updateConsumer = function (userId, consumerId) {
+  thunk.all(
+    exports.addUserConsumer(userId, consumerId),
+    redis.client.expire(genQueueKey(consumerId), expires)
+  )(ilog.error)
 }
 
 // Weaken consumer's message queue lifetime via ws.
@@ -111,17 +114,20 @@ exports.broadcastMessage = function (room, message) {
   })(ilog.error)
 }
 
-exports.addUserConsumer = function *(userId, consumerId) {
+exports.addUserConsumer = function *(userId, consumerId, simple) {
   var userKey = genUserStateKey(userId)
   debug('addUserConsumer:', userId, consumerId)
-  yield [
-    redis.client.sadd(userKey, consumerId),
-    // Stale room will be removed after 172800 sec.
-    redis.client.expire(userKey, DEFT_ROOM_EXP)
-  ]
+  if (simple) yield redis.client.sadd(userKey, consumerId)
+  else {
+    yield [
+      redis.client.sadd(userKey, consumerId),
+      // Stale room will be removed after 172800 sec.
+      redis.client.expire(userKey, DEFT_ROOM_EXP)
+    ]
 
-  // clean stale consumerId
-  checkUserConsumers(userId, consumerId)
+    // clean stale consumerId
+    checkUserConsumers(userId, consumerId)
+  }
 }
 
 exports.removeUserConsumer = function (userId, consumerId) {
@@ -171,7 +177,10 @@ function checkUserConsumers (userId, consumerId) {
         return function *() {
           let count = yield redis.client.llen(genQueueKey(consumer))
           // count is 0 means consumer not exists.
+
           // count is great than 1 means consumer is not online, so some messages are not consumed.
+          // but sometimes mistake, such as messages are not consumed in time.
+          // we rescue it in updateConsumer(socket heartbeat).
           if (count !== 1) exports.removeUserConsumer(userId, consumer)
         }
       }

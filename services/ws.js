@@ -77,7 +77,7 @@ module.exports = function (app) {
           // if clients dont have socket, but socket is connected, close it!
           // this happened in firefox, just close it so that brower will reconnect server.
           if (!wsServer.clients[this.id]) this.close()
-          else io.updateConsumer(this.id)
+          else io.updateConsumer(this.userId, this.id)
         })
         .on('message', onMessage)
         .on('error', ilog.error)

@@ -8,14 +8,15 @@ Teambition push messaging service, based on redis.
 
 1. 使用 JavaScript 开发，运行于 Node.js 环境；
 2. 消息队列池、状态数据池基于 Redis，支持 Redis cluster；
-3. 分布式部署，利用 `nginx ip_hash` 可在同一台机器中运行多个进程，利用 LVS 等负载均衡可以运行多台机器；
-4. 消息消费者 Consumer 客户端链接基于 Engine.IO 开发，使用 websocket 协议，自动重连，自动读取消息，另可支持 Android、iOS 客户端；
+3. 分布式部署，利用 `nginx ip_hash` 可在同一台机器中运行多个进程，利用 LVS 等负载均衡可以运行于多台机器；
+4. 消息消费者 Consumer 客户端链接基于 Engine.IO 开发，使用 websocket 协议，自动重连，自动读取消息，另可支持 Android、iOS 客户端，；
 5. 消息生产者 Producer 客户端基于 TCP 开发，内置消息队列，自动重连，确保消息发送到 Broker 服务器；
 6. 基于 [JSON-RPC 2.0](http://jsonrpc.org/specification) 协议，确保消息按序推送，推送成功且仅推送一次；
 7. 消息缓存机制，消费者断线重连后消息会自动送达（不会丢失），缓存时间可自定义，默认为 24 小时；
 8. 基于 Room 广播消息，即同一个消息可以分发给在同一个 Room 中的多个消费者；
-9. 同样基于 Room，对于同一个目标用户，支持建立多个消费链接，如同一份消息可以同时往多个浏览器窗口，或各个移动端推送；
+9. 同样基于 Room，对于同一个目标用户，支持建立多个消费链接，同一个消息可以同时推送到同一个用户的多个浏览器窗口，或各个移动端；
 10. 实时统计用户在线状态（即同一用户当前建立了多少个消费链接）。
+11. 客户端身份验证机制，Consumer 和 Producer 发起连接时都需要通过 token 验证身份。
 
 ### Snapper 构成
 
