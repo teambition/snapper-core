@@ -73,6 +73,7 @@ module.exports = function (app) {
     }
 
     if (res.payload.method !== 'auth') {
+      // should change to 401 in next version
       res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError('Unauthorized: ' + message, 400))
       return socket.end(socket.bufsp.encode(JSON.stringify(res)))
     }

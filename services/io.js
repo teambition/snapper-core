@@ -15,6 +15,7 @@ const messageChannel = `${redisPrefix}:message`
 const DEFT_ROOM_EXP = 3600 * 24 * 2
 const DEFT_NUM_MESSAGES_TO_PULL = 20
 const DEFT_MESSAGE_QUEUE_EXP = 60 * 5
+const MAX_MESSAGE_QUEUE_LEN = 1024 * 2 + 1 // the first is placeholder
 
 redis.clientSub
   .on('message', function (channel, consumerIds) {
@@ -98,13 +99,16 @@ exports.broadcastMessage = function (room, message) {
 
     yield consumers.map(function (consumerId) {
       // Ignore errors to deal with others
-      return redis.client.rpushx(genQueueKey(consumerId), message)(function (_, res) {
+      let queueKey = genQueueKey(consumerId)
+      return redis.client.rpushx(queueKey, message)(function (_, res) {
+        res = +res
         // Weaken non-exists consumer, it will be removed in next cycle unless it being added again.
-        if (!+res) return redis.client.hincrby(roomKey, consumerId, -1)
-        if (res) {
-          if (exports.consumers[consumerId]) pullMessage(consumerId)
-          else otherConsumers.push(consumerId)
-        }
+        if (!res) return redis.client.hincrby(roomKey, consumerId, -1)
+        // if queue's length is too large, means that consumer was offline long time,
+        // or some exception messages produced. Anyway, it is no need to cache
+        if (res > MAX_MESSAGE_QUEUE_LEN) return redis.client.rpop(queueKey)
+        if (exports.consumers[consumerId]) pullMessage(consumerId)
+        else otherConsumers.push(consumerId)
       })(ilog.error)
     })
 

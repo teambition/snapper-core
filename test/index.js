@@ -515,6 +515,45 @@ describe('snapper2', function () {
 
       consumer.connect()
     })
+
+    it('ignore excess messages(2048)', function (callback) {
+      var userId = Consumer.genUserId()
+      var token = producer.signAuth({userId: userId})
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
+      var res = []
+
+      consumer.onopen = function () {
+        // reset onpen
+        consumer.onopen = function () {}
+
+        var room = `user${userId}`
+        // wait for consumer join user room!
+        thunk.delay(200)(function *() {
+          consumer.close()
+          yield thunk.delay(200)
+
+          for (let i = 0; i < 2500; i++) {
+            producer.sendMessage(room, JSON.stringify(i))
+          }
+
+          yield thunk.delay(200)
+          consumer.connect()
+
+          yield thunk.delay(1000)
+          assert.strictEqual(res.length, 2048)
+        })(callback)
+      }
+
+      consumer.message = function (message) {
+        res.push(message)
+      }
+
+      consumer.onerror = callback
+      consumer.connect()
+    })
   })
 
   describe('stats && chaos', function () {
@@ -575,11 +614,11 @@ describe('snapper2', function () {
       }
     })
 
-    it('100000 messages to 20 consumers', function *() {
+    it('2000 messages to 200 consumers', function *() {
       var consumers = []
       var messages = []
-      while (messages.length < 100000) messages.push(messages.length)
-      while (consumers.length < 20) {
+      while (messages.length < 2000) messages.push(messages.length)
+      while (consumers.length < 200) {
         consumers.push(new Consumer(host, {
           path: '/websocket',
           token: producer.signAuth({userId: Consumer.genUserId()})
@@ -597,7 +636,6 @@ describe('snapper2', function () {
               done()
             } else {
               received.push(message)
-              if (!index && (received.length % 10000) === 0) process.stdout.write('.')
             }
           }
           consumer.onerror = function (err) {
@@ -624,8 +662,8 @@ describe('snapper2', function () {
         let random = Math.ceil(Math.random() * 100)
         // 等待 random 毫秒
         yield thunk.delay(random)
-        // 并发发送 10 * random  条消息
-        let todo = _messages.splice(0, random * 10)
+        // 并发发送 random  条消息
+        let todo = _messages.splice(0, random)
         // console.log('send:', todo.length, 'left:', _messages.length)
         while (todo.length) producer.sendMessage('chaos', JSON.stringify(todo.shift()))
         process.stdout.write('.')
@@ -640,12 +678,11 @@ describe('snapper2', function () {
         .get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
         .expect(function (res) {
           var info = res.body.stats
-          assert.strictEqual(info.total.producerMessages >= 100000, true)
-          assert.strictEqual(info.total.consumerMessages >= 100000 * 20, true)
-          assert.strictEqual(info.total.consumers >= 20, true)
-          assert.strictEqual(info.total.rooms >= 20, true)
-
-          assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 20, true)
+          assert.strictEqual(info.total.producerMessages >= 2000, true)
+          assert.strictEqual(info.total.consumerMessages >= 2000 * 20, true)
+          assert.strictEqual(info.total.consumers >= 200, true)
+          assert.strictEqual(info.total.rooms >= 200, true)
+          assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 200, true)
         })
     })
   })

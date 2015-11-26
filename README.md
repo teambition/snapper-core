@@ -43,14 +43,6 @@ Snapper 服务的基本流程如下：
 4. 用户客户端向 API 请求订阅相关 room，API 验证用户权限后通过 snapper-producer 转发请求给 snapper-core，从而用户与 room 建立关系；
 5. API 通过 snapper-producer 往 snapper-core 的各个 room 推送消息，snapper-core 从 redis 读取 room 与用户的关系，从而把发给该 room 的消息分发给 room 内用户。
 
-### install
-
-```bash
-git clone https://github.com/teambition/snapper-core.git
-cd snapper-core
-npm install --production
-```
-
 ### [更多文档](https://github.com/teambition/snapper-core/blob/master/docs/snapper.md)
 
 

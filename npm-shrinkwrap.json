@@ -1,15 +1,15 @@
 {
   "name": "snapper-core",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "dependencies": {
     "bufsp": {
       "version": "1.0.2",
       "from": "bufsp@>=1.0.2 <1.1.0"
     },
     "config": {
-      "version": "1.16.0",
-      "from": "config@>=1.16.0 <1.17.0",
-      "resolved": "https://registry.npmjs.org/config/-/config-1.16.0.tgz"
+      "version": "1.17.1",
+      "from": "config@>=1.17.1 <1.18.0",
+      "resolved": "https://registry.npmjs.org/config/-/config-1.17.1.tgz"
     },
     "debug": {
       "version": "2.2.0",
@@ -83,6 +83,7 @@
             "has-binary": {
               "version": "0.1.5",
               "from": "has-binary@0.1.5",
+              "resolved": "https://registry.npmjs.org/has-binary/-/has-binary-0.1.5.tgz",
               "dependencies": {
                 "isarray": {
                   "version": "0.0.1",
@@ -141,14 +142,15 @@
         },
         "statuses": {
           "version": "1.2.1",
-          "from": "statuses@>=1.0.0 <2.0.0",
+          "from": "statuses@>=1.2.1 <1.3.0",
           "resolved": "https://registry.npmjs.org/statuses/-/statuses-1.2.1.tgz"
         }
       }
     },
     "ilog": {
-      "version": "1.0.0",
-      "from": "ilog@>=1.0.0 <2.0.0"
+      "version": "1.0.1",
+      "from": "ilog@>=1.0.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/ilog/-/ilog-1.0.1.tgz"
     },
     "jsonrpc-lite": {
       "version": "1.1.0",
@@ -185,9 +187,9 @@
                   "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.13.tgz",
                   "dependencies": {
                     "core-util-is": {
-                      "version": "1.0.1",
+                      "version": "1.0.2",
                       "from": "core-util-is@>=1.0.0 <1.1.0",
-                      "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.1.tgz"
+                      "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz"
                     },
                     "isarray": {
                       "version": "0.0.1",
@@ -271,9 +273,9 @@
           }
         },
         "jwa": {
-          "version": "1.1.0",
+          "version": "1.1.1",
           "from": "jwa@>=1.1.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/jwa/-/jwa-1.1.0.tgz",
+          "resolved": "https://registry.npmjs.org/jwa/-/jwa-1.1.1.tgz",
           "dependencies": {
             "base64url": {
               "version": "0.0.6",
@@ -324,22 +326,24 @@
       }
     },
     "thunk-redis": {
-      "version": "1.1.1",
-      "from": "thunk-redis@>=1.1.1 <1.2.0",
+      "version": "1.2.2",
+      "from": "thunk-redis@>=1.2.2 <1.3.0",
       "dependencies": {
         "respjs": {
           "version": "2.0.3",
-          "from": "respjs@>=2.0.3 <3.0.0"
+          "from": "respjs@>=2.0.3 <3.0.0",
+          "resolved": "https://registry.npmjs.org/respjs/-/respjs-2.0.3.tgz"
         }
       }
     },
     "thunks": {
-      "version": "3.5.2",
-      "from": "thunks@>=3.5.2 <4.0.0"
+      "version": "4.0.1",
+      "from": "thunks@>=4.0.1 <5.0.0",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.0.1.tgz"
     },
     "toa": {
-      "version": "1.0.1",
-      "from": "toa@>=1.0.1 <1.1.0",
+      "version": "1.1.2",
+      "from": "toa@>=1.1.2 <1.2.0",
       "dependencies": {
         "accepts": {
           "version": "1.3.0",
@@ -467,11 +471,13 @@
     },
     "toa-pm": {
       "version": "0.2.0",
-      "from": "toa-pm@>=0.2.0 <0.3.0"
+      "from": "toa-pm@>=0.2.0 <0.3.0",
+      "resolved": "https://registry.npmjs.org/toa-pm/-/toa-pm-0.2.0.tgz"
     },
     "toa-router": {
       "version": "1.1.2",
       "from": "toa-router@>=1.1.2 <1.2.0",
+      "resolved": "https://registry.npmjs.org/toa-router/-/toa-router-1.1.2.tgz",
       "dependencies": {
         "methods": {
           "version": "1.1.1",
@@ -480,13 +486,15 @@
         },
         "route-trie": {
           "version": "1.0.1",
-          "from": "route-trie@>=1.0.1 <2.0.0"
+          "from": "route-trie@>=1.0.1 <2.0.0",
+          "resolved": "https://registry.npmjs.org/route-trie/-/route-trie-1.0.1.tgz"
         }
       }
     },
     "toa-token": {
       "version": "1.2.0",
       "from": "toa-token@>=1.2.0 <1.3.0",
+      "resolved": "https://registry.npmjs.org/toa-token/-/toa-token-1.2.0.tgz",
       "dependencies": {
         "jsonwebtoken": {
           "version": "5.0.5",
