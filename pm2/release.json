@@ -4,6 +4,6 @@
   "exec_mode": "cluster_mode",
   "instances": 7,
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "release"
   }
 }
