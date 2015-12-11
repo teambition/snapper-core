@@ -6,7 +6,7 @@ const thunk = require('thunks')()
 const ThunkQueue = require('thunk-queue')
 const Producer = require('snapper-producer')
 
-const io = require('../services/io')
+const io = require('../services/producer')
 const tools = require('../services/tools')
 const Consumer = require('./lib/consumer')
 

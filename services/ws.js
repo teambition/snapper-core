@@ -1,14 +1,15 @@
 'use strict'
 
+const ilog = require('ilog')
 const engine = require('engine.io')
 const thunk = require('thunks')()
 const jsonrpc = require('jsonrpc-lite')
 const debug = require('debug')('snapper:ws')
 
-const io = require('./io')
-const ilog = require('ilog')
 const tools = require('./tools')
 const stats = require('./stats')
+const io = require('./consumer')
+const producer = require('./producer')
 
 const TIMEOUT = 100 * 1000
 
@@ -55,7 +56,7 @@ module.exports = function (app) {
         yield [
           // Bind a consumer to a specified user's room.
           // A user may have one or more consumer's threads.
-          io.joinRoom(`user${session.userId}`, socket.id),
+          producer.joinRoom(`user${session.userId}`, socket.id),
           // update user's online consumer
           io.addUserConsumer(socket.userId, socket.id)
         ]

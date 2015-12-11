@@ -9,19 +9,22 @@ const ThunkQueue = require('thunk-queue')
 const Producer = require('snapper-producer')
 
 const app = require('../app')
+const rpc = require('../rpc')
 const redis = require('../services/redis')
 const stats = require('../services/stats')
 const Consumer = require('./lib/consumer')
+
+const redisClient = redis.defaultClient
 
 var producerId = 0
 
 describe('snapper2', function () {
   before(function *() {
-    yield redis.client.flushall()
+    yield redisClient.flushall()
   })
 
   after(function *() {
-    yield redis.client.flushall()
+    yield redisClient.flushall()
     yield thunk.delay(1000)
     process.emit('message', 'shutdown')
   })
@@ -202,11 +205,11 @@ describe('snapper2', function () {
           if (reconnecting) {
             producer.close()
             callback()
-          } else app.context.rpc.destroy()
+          } else rpc.destroy()
         })
         .on('reconnecting', function () {
           reconnecting = true
-          app.connectRPC()
+          rpc.start()
         })
     })
 
@@ -607,9 +610,9 @@ describe('snapper2', function () {
       })()
 
       function restartServer () {
-        app.context.rpc.destroy()
+        rpc.destroy()
         thunk.delay(1000)(function () {
-          app.connectRPC()
+          rpc.start()
         })
       }
     })
@@ -621,6 +624,7 @@ describe('snapper2', function () {
       while (consumers.length < 200) {
         consumers.push(new Consumer(host, {
           path: '/websocket',
+          transports: ['websocket'], // easy to trigger "xhr poll error"
           token: producer.signAuth({userId: Consumer.genUserId()})
         }))
       }

@@ -2,15 +2,16 @@
 
 const Toa = require('toa')
 const pm = require('toa-pm')
+const ilog = require('ilog')
 const config = require('config')
 const toaToken = require('toa-token')
 const debug = require('debug')('snapper')
 
 const packageInfo = require('./package.json')
 const ws = require('./services/ws')
-const rpc = require('./services/rpc')
-const ilog = require('./services/log')
 const stats = require('./services/stats')
+
+ilog.level = config.logLevel
 
 const app = module.exports = Toa(function *() {
   debug('http request:', this.method, this.url, this.ip)
@@ -31,13 +32,9 @@ const app = module.exports = Toa(function *() {
 
 config.instancePort = config.port + (+process.env.NODE_APP_INSTANCE || 0)
 
-app.onerror = ilog.error
-
-app.connectRPC = function () {
-  this.context.rpc = rpc(this)
-}
-app.connectWS = function () {
-  this.context.ws = ws(this)
+app.onerror = function (err) {
+  if (!err || err.status < 500) return
+  ilog.error(err)
 }
 
 toaToken(app, config.tokenSecret, {
@@ -52,22 +49,14 @@ toaToken(app, config.tokenSecret, {
 /**
  * Start up service.
  */
-app.listen(config.instancePort, config.backlog)
-app.connectRPC()
-app.connectWS()
-// The server is finally closed and exit gracefully when all connections are ended.
-pm(app, function (msg) {
-  if (msg !== 'shutdown') return
-  app.context.rpc.close(function () {
-    app.server.close(function () {
-      process.exit(0)
-    })
+app.listen(config.instancePort, config.backlog, function () {
+  ilog.info({
+    class: 'snapper-core',
+    listen: config.instancePort,
+    serverId: stats.serverId,
+    appConfig: app.config
   })
 })
-
-ilog.info({
-  listen: config.instancePort,
-  rpcPort: config.rpcPort,
-  serverId: stats.serverId,
-  appConfig: app.config
-})
+ws(app)
+// The server is finally closed and exit gracefully when all connections are ended.
+pm(app)

@@ -13,11 +13,13 @@ const network = JSON.stringify(os.networkInterfaces())
 
 const serverId = tools.md5(JSON.stringify(network))
 // Hash
-const statsKey = `${config.redisPrefix}:STATS`
+const statsKey = `${redis.PREFIX}:STATS`
 // HyperLogLog
-const roomKey = `${config.redisPrefix}:STATS:ROOM`
+const roomKey = `${redis.PREFIX}:STATS:ROOM`
 // Hash
-const serverKey = `${config.redisPrefix}:STATS:SERVERS`
+const serverKey = `${redis.PREFIX}:STATS:SERVERS`
+
+const redisClient = redis.defaultClient
 
 exports.serverId = serverId
 
@@ -34,30 +36,30 @@ exports.os = function () {
 }
 
 exports.incrProducerMessages = function (count) {
-  redis.client.hincrby(statsKey, 'producerMessages', count)(ilog.error)
+  redisClient.hincrby(statsKey, 'producerMessages', count)(ilog.error)
 }
 
 exports.incrConsumerMessages = function (count) {
-  redis.client.hincrby(statsKey, 'consumerMessages', count)(ilog.error)
+  redisClient.hincrby(statsKey, 'consumerMessages', count)(ilog.error)
 }
 
 exports.incrConsumers = function (count) {
-  redis.client.hincrby(statsKey, 'consumers', count)(ilog.error)
+  redisClient.hincrby(statsKey, 'consumers', count)(ilog.error)
 }
 
 exports.addRoomsHyperlog = function (roomId) {
-  redis.client.pfadd(roomKey, roomId)(ilog.error)
+  redisClient.pfadd(roomKey, roomId)(ilog.error)
 }
 
 exports.setConsumersStats = function (consumers) {
-  redis.client.hset(serverKey, `${serverId}:${config.instancePort}`, consumers)(ilog.error)
+  redisClient.hset(serverKey, `${serverId}:${config.instancePort}`, consumers)(ilog.error)
 }
 
 exports.clientsStats = function *() {
   var res = yield [
-    redis.client.pfcount(roomKey),
-    redis.client.hgetall(statsKey),
-    redis.client.hgetall(serverKey)
+    redisClient.pfcount(roomKey),
+    redisClient.hgetall(statsKey),
+    redisClient.hgetall(serverKey)
   ]
   res[1].rooms = '' + res[0]
   return {

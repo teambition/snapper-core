@@ -1,11 +1,23 @@
-{
+[{
   "name": "snapper-dev",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
   "instances": 2,
+  "merge_logs": true,
   "autorestart": false,
   "env": {
     "DEBUG": "",
     "NODE_ENV": "development"
   }
-}
+}, {
+  "name": "snapper-rpc",
+  "script": "./rpc.js",
+  "exec_mode": "cluster_mode",
+  "instances": 1,
+  "merge_logs": true,
+  "autorestart": false,
+  "env": {
+    "DEBUG": "",
+    "NODE_ENV": "development"
+  }
+}]

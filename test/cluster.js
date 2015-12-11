@@ -12,6 +12,8 @@ const Producer = require('snapper-producer')
 config.redis.hosts = [7000, 7001, 7002]
 
 require('../app')
+require('../rpc')
+
 const redis = require('../services/redis')
 const Consumer = require('./lib/consumer')
 
@@ -22,11 +24,11 @@ describe('snapper on redis cluster', function () {
   var host = '127.0.0.1:' + config.port
 
   before(function *() {
-    yield redis.client.flushall()
+    yield redis.defaultClient.flushall()
   })
 
   after(function *() {
-    yield redis.client.flushall()
+    yield redis.defaultClient.flushall()
     yield thunk.delay(1000)
     process.emit('message', 'shutdown')
   })
@@ -43,15 +45,16 @@ describe('snapper on redis cluster', function () {
       .once('connect', callback)
   })
 
-  it('10000 messages, 200 rooms, 50 consumers', function *() {
+  it('2000 messages, 200 rooms, 50 consumers', function *() {
     var consumers = []
     var messages = []
     var rooms = []
-    while (messages.length < 10000) messages.push(messages.length)
+    while (messages.length < 2000) messages.push(messages.length)
     while (rooms.length < 200) rooms.push('room' + rooms.length)
     while (consumers.length < 50) {
       consumers.push(new Consumer(host, {
         path: '/websocket',
+        transports: ['websocket'], // easy to trigger "xhr poll error"
         token: producer.signAuth({userId: Consumer.genUserId()})
       }))
     }
@@ -65,7 +68,7 @@ describe('snapper on redis cluster', function () {
           if (message === null) {
             // 不同的 room 不能保证时序
             received.sort(function (a, b) { return a - b })
-            // if (JSON.stringify(received) !== JSON.stringify(messages)) console.log(JSON.stringify(received))
+            if (JSON.stringify(received) !== JSON.stringify(messages)) console.log(JSON.stringify(received))
             assert.deepEqual(received, messages)
             done()
           } else {
