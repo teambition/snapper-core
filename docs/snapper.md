@@ -174,7 +174,11 @@ socketClient.connect('https://push.teambition.com', {
 
 ### 横向扩展机制
 
-#### Enable `nginx ip_hash`: http://socket.io/docs/using-multiple-nodes/
+#### Enable `nginx ip_hash`
+
+http://socket.io/docs/using-multiple-nodes/
+
+https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/
 
 ### 单用户多消费者机制
 

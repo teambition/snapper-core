@@ -52,7 +52,9 @@ exports.broadcastMessage = function (room, message) {
         if (!res) return redisClient.hincrby(roomKey, consumerId, -1)
         // if queue's length is too large, means that consumer was offline long time,
         // or some exception messages produced. Anyway, it is no need to cache
-        if (res > redis.MAX_MESSAGE_QUEUE_LEN) return redisClient.rpop(queueKey)
+        if (res > redis.MAX_MESSAGE_QUEUE_LEN * 1.5) {
+          return redisClient.ltrim(queueKey, 0, redis.MAX_MESSAGE_QUEUE_LEN)
+        }
       })(ilog.error)
     })
 

@@ -17,9 +17,6 @@ module.exports = function (app) {
   var wsServer = new engine.Server({
     cookie: 'snapper.ws',
     allowRequest: function (req, callback) {
-      debug('connect instance: %s', app.config.instance)
-      debug('handshake: %s', req.url, req._query, JSON.stringify(req.headers))
-
       var token = req._query && req._query.token
       try {
         req.session = app.verifyToken(token)

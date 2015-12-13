@@ -9,9 +9,9 @@ const PREFIX = exports.PREFIX = config.redisPrefix
 exports.EXPIRES = config.redisQueueExpires
 exports.CHANNEL = `${PREFIX}:message`
 exports.DEFT_ROOM_EXP = 3600 * 24 * 2
-exports.DEFT_NUM_MESSAGES_TO_PULL = 20
+exports.DEFT_NUM_MESSAGES_TO_PULL = 50
 exports.DEFT_MESSAGE_QUEUE_EXP = 60 * 5
-exports.MAX_MESSAGE_QUEUE_LEN = 1024 * 2 + 1 // the first is placeholder
+exports.MAX_MESSAGE_QUEUE_LEN = 1024 * 2
 
 var clientIndex = 0
 exports.getClient = function () {

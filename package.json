@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -31,7 +31,7 @@
     "ilog": "^1.0.1",
     "jsonrpc-lite": "~1.1.0",
     "jws": "~3.1.0",
-    "thunk-redis": "~1.2.4",
+    "thunk-redis": "~1.3.0",
     "thunks": "^4.1.0",
     "toa": "~1.2.0",
     "toa-pm": "~0.2.0",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "engine.io-client": "^1.6.4",
     "mocha": "^2.3.4",
-    "snapper-consumer": "^1.1.0",
+    "snapper-consumer": "^1.1.1",
     "snapper-producer": "^1.0.3",
     "standard": "^5.4.1",
     "supertest": "^1.1.0",

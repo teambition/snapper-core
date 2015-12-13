@@ -101,8 +101,7 @@ function onAuth (message) {
   }
 
   if (res.payload.method !== 'auth') {
-    // should change to 401 in next version
-    res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError('Unauthorized: ' + message, 400))
+    res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError('Unauthorized: ' + message, 401))
     return socket.end(socket.bufsp.encode(JSON.stringify(res)))
   }
 

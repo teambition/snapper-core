@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "dependencies": {
     "bufsp": {
       "version": "1.0.2",
@@ -349,8 +349,8 @@
       }
     },
     "thunk-redis": {
-      "version": "1.2.4",
-      "from": "thunk-redis@>=1.2.4 <1.3.0",
+      "version": "1.3.0",
+      "from": "thunk-redis@1.3.0",
       "dependencies": {
         "respjs": {
           "version": "2.0.3",
