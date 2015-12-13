@@ -538,7 +538,7 @@ describe('snapper2', function () {
           consumer.close()
           yield thunk.delay(200)
 
-          for (let i = 0; i < 2500; i++) {
+          for (let i = 0; i < 4096; i++) {
             producer.sendMessage(room, JSON.stringify(i))
           }
 
@@ -546,7 +546,7 @@ describe('snapper2', function () {
           consumer.connect()
 
           yield thunk.delay(1000)
-          assert.strictEqual(res.length, 2048)
+          assert.strictEqual(res.length < 2048 * 1.5, true)
         })(callback)
       }
 
