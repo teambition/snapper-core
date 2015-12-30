@@ -8,7 +8,7 @@
   "tokenExpires": 172800,
   "redisQueueExpires": 86400,
   "redis": {
-    "hosts": "127.0.0.1:6379",
+    "hosts": ["127.0.0.1:6379"],
     "options": null
   }
 }

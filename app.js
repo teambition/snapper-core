@@ -5,7 +5,6 @@ const pm = require('toa-pm')
 const ilog = require('ilog')
 const config = require('config')
 const toaToken = require('toa-token')
-const debug = require('debug')('snapper')
 
 const packageInfo = require('./package.json')
 const ws = require('./services/ws')
@@ -14,8 +13,6 @@ const stats = require('./services/stats')
 ilog.level = config.logLevel
 
 const app = module.exports = Toa(function *() {
-  debug('http request:', this.method, this.url, this.ip)
-
   if (this.path === '/stats') {
     let token = this.token
     if (token.name !== 'snapper') this.throw(400)

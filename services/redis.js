@@ -13,21 +13,18 @@ exports.DEFT_NUM_MESSAGES_TO_PULL = 50
 exports.DEFT_MESSAGE_QUEUE_EXP = 60 * 5
 exports.MAX_MESSAGE_QUEUE_LEN = 1024 * 2
 
-var clientIndex = 0
 exports.getClient = function () {
   return redis.createClient(config.redis.hosts, config.redis.options)
-    .on('connect', function () {
-      ilog.info({
-        redisHost: config.redis.port,
-        redisPort: config.redis.host,
-        message: 'thunk-redis connected',
-        index: ++clientIndex
-      })
+    .on('error', function (err) {
+      err.class = 'thunk-redis'
+      ilog.error(err)
+      if (err.code === 'ENETUNREACH') throw err
     })
-    .on('error', function (error) {
-      ilog.emergency(error)
-      // the application should restart if error occured
-      throw error
+    .on('close', function (err) {
+      err = err || new Error('Redis client closed!')
+      err.class = 'thunk-redis'
+      ilog.error(err)
+      throw err
     })
 }
 
