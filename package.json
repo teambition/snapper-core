@@ -4,14 +4,14 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.0.3",
+  "version": "2.1.0",
   "main": "app.js",
   "repository": {
     "type": "git",
     "url": "git@github.com:teambition/snapper-core.git"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=4"
   },
   "homepage": "https://github.com/teambition/snapper-core",
   "keywords": [
@@ -23,24 +23,24 @@
     "teambition"
   ],
   "dependencies": {
-    "bufsp": "~1.0.2",
-    "config": "~1.17.1",
+    "config": "~1.19.0",
     "debug": "~2.2.0",
-    "engine.io": "~1.6.5",
+    "engine.io": "~1.6.7",
     "http-errors": "~1.3.1",
-    "ilog": "^1.0.1",
+    "ilog": "^1.0.2",
     "jsonrpc-lite": "~1.1.0",
-    "jws": "~3.1.0",
-    "thunk-redis": "~1.4.0",
-    "thunks": "^4.1.1",
-    "toa": "~1.3.1",
-    "toa-pm": "~0.2.0",
+    "jws": "~3.1.1",
+    "respjs": "^2.0.4",
+    "thunk-redis": "~1.4.1",
+    "thunks": "^4.1.2",
+    "toa": "~1.3.2",
+    "toa-pm": "~0.2.1",
     "toa-token": "~2.0.0"
   },
   "devDependencies": {
-    "engine.io-client": "^1.6.5",
+    "engine.io-client": "^1.6.7",
     "mocha": "^2.3.4",
-    "snapper-consumer": "^1.1.1",
+    "snapper-consumer": "^1.1.2",
     "snapper-producer": "^1.0.3",
     "standard": "^5.4.1",
     "supertest": "^1.1.0",

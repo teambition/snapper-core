@@ -2,7 +2,7 @@
 
 const net = require('net')
 const ilog = require('ilog')
-const Bufsp = require('bufsp')
+const Resp = require('respjs')
 const config = require('config')
 const thunk = require('thunks')()
 const jsonrpc = require('jsonrpc-lite')
@@ -21,12 +21,9 @@ ilog.level = config.logLevel
 var server = module.exports = net.createServer(function (socket) {
   debug('connection:', socket.remoteAddress, socket.remotePort)
 
-  socket.bufsp = new Bufsp({
-    encoding: 'utf8',
-    returnString: true
-  })
-  socket.bufsp.socket = socket
-  socket.pipe(socket.bufsp)
+  socket.resp = new Resp()
+  socket.resp.socket = socket
+  socket.pipe(socket.resp)
 
   socket
     .on('error', function (err) {
@@ -42,7 +39,7 @@ var server = module.exports = net.createServer(function (socket) {
     .on('end', onSocketClose)
     .on('close', onSocketClose)
 
-  socket.bufsp
+  socket.resp
     .once('data', onAuth)
     .on('error', function (err) {
       err.class = 'snapper-rpc-socket-data'
@@ -97,12 +94,12 @@ function onAuth (message) {
 
   var res = jsonrpc.parse(message)
   if (res.type !== 'request') {
-    return socket.end(socket.bufsp.encode(new Error(`Receive a unhandle message: ${message}`)))
+    return socket.end(Resp.bufferify(new Error(`Receive a unhandle message: ${message}`)))
   }
 
   if (res.payload.method !== 'auth') {
     res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError('Unauthorized: ' + message, 401))
-    return socket.end(socket.bufsp.encode(JSON.stringify(res)))
+    return socket.end(Resp.bufferify(JSON.stringify(res)))
   }
 
   // params: [tokenxxx]
@@ -113,10 +110,10 @@ function onAuth (message) {
     socket.id = tools.md5(res.payload.params[0])
     socket.producerId = socket.token.producerId
     res = jsonrpc.success(res.payload.id, {id: socket.id})
-    socket.write(socket.bufsp.encode(JSON.stringify(res)))
+    socket.write(Resp.bufferify(JSON.stringify(res)))
   } catch (err) {
     res = jsonrpc.error(res.payload.id, new jsonrpc.JsonRpcError(err.message, 400))
-    return socket.end(socket.bufsp.encode(JSON.stringify(res)))
+    return socket.end(Resp.bufferify(JSON.stringify(res)))
   }
   // Socket is ready to listen.
   socket.invalidRequestCount = 0
@@ -133,7 +130,7 @@ function onData (message) {
     this.emit('error', new Error(`Receive a unhandle message: ${message}`))
     socket.invalidRequestCount++
     if (socket.invalidRequestCount > DEFT_MAX_INVALID_REQ_NUM) {
-      socket.end(socket.bufsp.encode(new Error('excessive invalid requests')))
+      socket.end(Resp.bufferify(new Error('excessive invalid requests')))
     }
     return
   }
@@ -149,7 +146,7 @@ function onData (message) {
     } else {
       data = jsonrpc.success(req.payload.id, res == null ? 'OK' : res)
     }
-    socket.write(socket.bufsp.encode(JSON.stringify(data)))
+    socket.write(Resp.bufferify(JSON.stringify(data)))
   })
 }
 
