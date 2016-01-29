@@ -9,9 +9,9 @@ const jsonrpc = require('jsonrpc-lite')
 const toaToken = require('toa-token')
 const debug = require('debug')('snapper:rpc')
 
-const producer = require('./services/producer')
-const tools = require('./services/tools')
-const stats = require('./services/stats')
+const producer = require('./lib/services/producer')
+const tools = require('./lib/services/tools')
+const stats = require('./lib/services/stats')
 
 const DEFT_MAX_INVALID_REQ_NUM = 100
 const jwt = new toaToken.JWT(config.tokenSecret)

@@ -10,8 +10,8 @@ const Producer = require('snapper-producer')
 
 const app = require('../app')
 const rpc = require('../rpc')
-const redis = require('../services/redis')
-const stats = require('../services/stats')
+const redis = require('../lib/services/redis')
+const stats = require('../lib/services/stats')
 const Consumer = require('./lib/consumer')
 
 const redisClient = redis.defaultClient
@@ -583,6 +583,7 @@ describe('snapper2', function () {
       var userId = Consumer.genUserId()
       var consumer = new Consumer(host, {
         path: '/websocket',
+        transports: ['websocket'], // easy to trigger "xhr poll error"
         token: producer.signAuth({userId: userId})
       })
       consumer.message = function (message) {
@@ -631,7 +632,8 @@ describe('snapper2', function () {
 
       // 注册 consumers 消息处理器
       var thunkQueue = ThunkQueue()
-      consumers.forEach(function (consumer, index) {
+      // 等待 consumers 连接并加入 chaos room
+      yield consumers.map(function (consumer) {
         var received = []
         thunkQueue.push(thunk(function (done) {
           consumer.message = function (message) {
@@ -642,16 +644,12 @@ describe('snapper2', function () {
               received.push(message)
             }
           }
-          consumer.onerror = function (err) {
-            console.error(err)
-            done(err)
-          }
+          consumer.onerror = done
           // consumer.onclose = done
+        })(function (err) {
+          if (err) throw err
         }))
-      })
 
-      // 等待 consumers 连接并加入 chaos room
-      yield consumers.map(function (consumer) {
         return thunk(function (done) {
           consumer.onopen = function () {
             producer.joinRoom('chaos', consumer.consumerId, done)
@@ -678,16 +676,13 @@ describe('snapper2', function () {
       yield thunkQueue.end()
 
       // get stats
-      yield request(app.server)
-        .get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
-        .expect(function (res) {
-          var info = res.body.stats
-          assert.strictEqual(info.total.producerMessages >= 2000, true)
-          assert.strictEqual(info.total.consumerMessages >= 2000 * 20, true)
-          assert.strictEqual(info.total.consumers >= 200, true)
-          assert.strictEqual(info.total.rooms >= 200, true)
-          assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 200, true)
-        })
+      let res = yield request(app.server).get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
+      var info = res.body.stats
+      assert.strictEqual(info.total.producerMessages >= 2000, true)
+      assert.strictEqual(info.total.consumerMessages >= 2000 * 20, true)
+      assert.strictEqual(info.total.consumers >= 200, true)
+      assert.strictEqual(info.total.rooms >= 200, true)
+      assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 200, true)
     })
   })
 })

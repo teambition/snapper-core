@@ -7,8 +7,8 @@ const config = require('config')
 const toaToken = require('toa-token')
 
 const packageInfo = require('./package.json')
-const ws = require('./services/ws')
-const stats = require('./services/stats')
+const ws = require('./lib/services/ws')
+const stats = require('./lib/services/stats')
 
 ilog.level = config.logLevel
 
@@ -37,8 +37,7 @@ app.onerror = function (err) {
 toaToken(app, config.tokenSecret, {
   expiresInSeconds: config.expires,
   getToken: function () {
-    if (this.method !== 'GET') return
-    // GET requests permits both authorization headers and signature query.
+    // both authorization headers and signature query token.
     return this.query.token
   }
 })
@@ -50,8 +49,7 @@ app.listen(config.instancePort, config.backlog, function () {
   ilog.info({
     class: 'snapper-core',
     listen: config.instancePort,
-    serverId: stats.serverId,
-    appConfig: app.config
+    serverId: stats.serverId
   })
 })
 ws(app)

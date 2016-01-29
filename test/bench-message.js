@@ -6,8 +6,8 @@ const thunk = require('thunks')()
 const ThunkQueue = require('thunk-queue')
 const Producer = require('snapper-producer')
 
-const io = require('../services/producer')
-const tools = require('../services/tools')
+const io = require('../lib/services/producer')
+const tools = require('../lib/services/tools')
 const Consumer = require('./lib/consumer')
 
 // const host = 'push.teambition.net'
