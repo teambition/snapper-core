@@ -50,6 +50,17 @@ Snapper 服务的基本流程如下：
 
 ### [更多文档](https://github.com/teambition/snapper-core/blob/master/docs/snapper.md)
 
+### Docker
+
+build:
+```sh
+docker build -t teambition/snapper .
+```
+
+test:
+```sh
+docker run --rm -ti teambition/snapper bash -c 'node app.js & node rpc.js'
+```
 
 [npm-url]: https://npmjs.org/package/snapper-core
 [npm-image]: http://img.shields.io/npm/v/snapper-core.svg
