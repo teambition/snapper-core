@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.3.1",
+  "version": "2.3.2",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -30,8 +30,8 @@
     "ilog": "^1.0.2",
     "jsonrpc-lite": "~1.1.0",
     "jws": "~3.1.3",
-    "respjs": "^3.0.1",
-    "thunk-redis": "~1.5.4",
+    "respjs": "^3.1.0",
+    "thunk-redis": "~1.5.5",
     "thunks": "^4.1.4",
     "toa": "~1.4.1",
     "toa-pm": "~0.2.1",

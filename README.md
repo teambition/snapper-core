@@ -8,6 +8,11 @@ Teambition push messaging service, based on redis.
 
 [Snapper](https://github.com/teambition/snapper-core) 是 Teambition 开源的一个运行于 Node.js 环境的分布式消息推送系统。不同于 [kafka](https://github.com/apache/kafka)、[RabbitMQ](https://github.com/rabbitmq/rabbitmq-server)、[ActiveMQ](https://github.com/apache/activemq)，Snapper 主要用于向浏览器端、移动端推送实时消息，目前正用于 Teambition Web 端消息推送，可以通过 https://push.teambition.com/ 查看当前运行的版本。
 
+### 客户端
+1. node.js 或浏览器端 [snapper-consumer](https://github.com/teambition/snapper-consumer)
+2. iOS 端 [snapper-swift](https://github.com/teambition/snapper-swift)
+3. Android 端 [snapper-android](https://github.com/teambition/snapper-android)
+
 ### Snapper 主要特点
 
 1. 使用 JavaScript 开发，运行于 Node.js 环境；

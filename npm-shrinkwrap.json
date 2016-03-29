@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "dependencies": {
     "config": {
       "version": "1.19.0",
@@ -21,7 +21,7 @@
       "dependencies": {
         "ms": {
           "version": "0.7.1",
-          "from": "ms@0.7.1",
+          "from": "ms@>=0.7.1 <0.8.0",
           "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.1.tgz"
         }
       }
@@ -292,16 +292,17 @@
       }
     },
     "respjs": {
-      "version": "3.0.1",
-      "from": "respjs@>=3.0.1 <4.0.0"
+      "version": "3.1.0",
+      "from": "respjs@>=3.1.0 <4.0.0"
     },
     "thunk-redis": {
-      "version": "1.5.4",
-      "from": "thunk-redis@>=1.5.4 <1.6.0"
+      "version": "1.5.5",
+      "from": "thunk-redis@>=1.5.5 <1.6.0"
     },
     "thunks": {
       "version": "4.1.4",
-      "from": "thunks@>=4.1.4 <5.0.0"
+      "from": "thunks@>=4.1.4 <5.0.0",
+      "resolved": "http://registry.npmjs.org/thunks/-/thunks-4.1.4.tgz"
     },
     "toa": {
       "version": "1.4.1",
@@ -364,7 +365,7 @@
         "fresh": {
           "version": "0.3.0",
           "from": "fresh@>=0.3.0 <0.4.0",
-          "resolved": "https://registry.npmjs.org/fresh/-/fresh-0.3.0.tgz"
+          "resolved": "http://registry.npmjs.org/fresh/-/fresh-0.3.0.tgz"
         },
         "mime-types": {
           "version": "2.1.10",
