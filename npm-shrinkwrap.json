@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "dependencies": {
     "config": {
       "version": "1.19.0",

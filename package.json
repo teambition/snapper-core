@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.3.2",
+  "version": "2.3.3",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -41,7 +41,7 @@
     "engine.io-client": "^1.6.8",
     "mocha": "^2.4.5",
     "snapper-consumer": "^1.1.2",
-    "snapper-producer": "^1.2.0",
+    "snapper-producer": "^1.2.1",
     "standard": "^6.0.8",
     "supertest": "^1.2.0",
     "thunk-mocha": "^1.0.3",
