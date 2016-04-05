@@ -1,8 +1,8 @@
 'use strict'
-/*global describe, it, before, after, beforeEach*/
 
 // TODO some issue with script on redis cluster
 
+const tman = require('tman')
 const config = require('config')
 const assert = require('assert')
 const thunk = require('thunks')()
@@ -14,26 +14,26 @@ config.redis.hosts = [7000, 7001, 7002]
 require('../app')
 require('../rpc')
 
-const redis = require('../services/redis')
+const redis = require('../service/redis')
 const Consumer = require('./lib/consumer')
 
 var producerId = 0
 
-describe('snapper on redis cluster', function () {
+tman.suite('snapper on redis cluster', function () {
+  this.timeout(50000)
+
   var producer = null
   var host = '127.0.0.1:' + config.port
 
-  before(function *() {
+  tman.before(function *() {
     yield redis.defaultClient.flushall()
   })
 
-  after(function *() {
+  tman.after(function *() {
     yield redis.defaultClient.flushall()
-    yield thunk.delay(1000)
-    process.emit('message', 'shutdown')
   })
 
-  beforeEach(function (callback) {
+  tman.beforeEach(function (callback) {
     producer = new Producer(config.rpcPort, {
       secretKeys: config.tokenSecret,
       producerId: ++producerId + ''
@@ -45,7 +45,7 @@ describe('snapper on redis cluster', function () {
       .once('connect', callback)
   })
 
-  it('2000 messages, 200 rooms, 50 consumers', function *() {
+  tman.it('2000 messages, 200 rooms, 50 consumers', function *() {
     var consumers = []
     var messages = []
     var rooms = []

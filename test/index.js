@@ -1,6 +1,6 @@
 'use strict'
-/*global describe, it, before, after*/
 
+const tman = require('tman')
 const config = require('config')
 const assert = require('assert')
 const thunk = require('thunks')()
@@ -10,27 +10,27 @@ const Producer = require('snapper-producer')
 
 const app = require('../app')
 const rpc = require('../rpc')
-const redis = require('../lib/services/redis')
-const stats = require('../lib/services/stats')
+const redis = require('../lib/service/redis')
+const stats = require('../lib/service/stats')
 const Consumer = require('./lib/consumer')
 
 const redisClient = redis.defaultClient
 
 var producerId = 0
 
-describe('snapper2', function () {
-  before(function *() {
+tman.suite('snapper2', function () {
+  this.timeout(5000)
+
+  tman.before(function *() {
     yield redisClient.flushall()
   })
 
-  after(function *() {
+  tman.after(function *() {
     yield redisClient.flushall()
-    yield thunk.delay(1000)
-    process.emit('message', 'shutdown')
   })
 
-  describe('rpc', function () {
-    it('connect:Unauthorized', function (callback) {
+  tman.suite('rpc', function () {
+    tman.it('connect:Unauthorized', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: 'xxx',
         producerId: ++producerId + ''
@@ -46,7 +46,7 @@ describe('snapper2', function () {
         .on('close', callback)
     })
 
-    it('connect:success', function (callback) {
+    tman.it('connect:success', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -62,7 +62,7 @@ describe('snapper2', function () {
         .on('close', callback)
     })
 
-    it('signAuth', function (callback) {
+    tman.it('signAuth', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -81,7 +81,7 @@ describe('snapper2', function () {
         .on('close', callback)
     })
 
-    it('sendMessage', function (callback) {
+    tman.it('sendMessage', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -99,7 +99,7 @@ describe('snapper2', function () {
         .sendMessage('test', 'c')
     })
 
-    it('joinRoom, leaveRoom', function (callback) {
+    tman.it('joinRoom, leaveRoom', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -136,7 +136,7 @@ describe('snapper2', function () {
       })
     })
 
-    it('request', function (callback) {
+    tman.it('request', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -190,7 +190,7 @@ describe('snapper2', function () {
       })(callback)
     })
 
-    it('reconnecting', function (callback) {
+    tman.it('reconnecting', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -213,7 +213,7 @@ describe('snapper2', function () {
         })
     })
 
-    it('close', function (callback) {
+    tman.it('close', function (callback) {
       var producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -235,11 +235,11 @@ describe('snapper2', function () {
     })
   })
 
-  describe('ws', function () {
+  tman.suite('ws', function () {
     var producer = null
     var host = '127.0.0.1:' + config.port
 
-    before(function (callback) {
+    tman.before(function (callback) {
       producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -249,11 +249,11 @@ describe('snapper2', function () {
         .on('connect', callback)
     })
 
-    after(function () {
+    tman.after(function () {
       producer.close()
     })
 
-    it('connect:Unauthorized', function (callback) {
+    tman.it('connect:Unauthorized', function (callback) {
       var consumer = new Consumer(host, {
         path: '/websocket',
         token: 'errorToken'
@@ -270,7 +270,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('connect:success', function (callback) {
+    tman.it('connect:success', function (callback) {
       var token = producer.signAuth({userId: Consumer.genUserId()})
       var consumer = new Consumer(host, {
         path: '/websocket',
@@ -287,7 +287,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('echo request', function (callback) {
+    tman.it('echo request', function (callback) {
       var token = producer.signAuth({userId: Consumer.genUserId()})
       var consumer = new Consumer(host, {
         path: '/websocket',
@@ -305,7 +305,21 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('update user consumer state', function *() {
+    tman.it('invalid echo request', function (callback) {
+      var token = producer.signAuth({userId: Consumer.genUserId()})
+      var consumer = new Consumer(host, {
+        path: '/websocket',
+        token: token
+      })
+      consumer.onerror = function () {
+        assert.strictEqual('Should not run', true)
+      }
+      consumer.onclose = callback
+      consumer.request('test', undefined, callback)
+      consumer.connect()
+    })
+
+    tman.it('update user consumer state', function *() {
       var userId = Consumer.genUserId()
 
       function addConsumer (id) {
@@ -361,7 +375,7 @@ describe('snapper2', function () {
       assert.deepEqual(consumerIds, [])
     })
 
-    it('receive message in order', function (callback) {
+    tman.it('receive message in order', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
       var consumer = new Consumer(host, {
@@ -400,7 +414,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('join room and receive message', function (callback) {
+    tman.it('join room and receive message', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
       var consumer = new Consumer(host, {
@@ -454,7 +468,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('reconnect and receive message', function (callback) {
+    tman.it('reconnect and receive message', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
       var consumer = new Consumer(host, {
@@ -519,7 +533,7 @@ describe('snapper2', function () {
       consumer.connect()
     })
 
-    it('ignore excess messages(2048)', function (callback) {
+    tman.it('ignore excess messages(2048)', function (callback) {
       var userId = Consumer.genUserId()
       var token = producer.signAuth({userId: userId})
       var consumer = new Consumer(host, {
@@ -559,11 +573,13 @@ describe('snapper2', function () {
     })
   })
 
-  describe('stats && chaos', function () {
+  tman.suite('stats && chaos', function () {
+    this.timeout(50000)
+
     var producer = null
     var host = '127.0.0.1:' + config.port
 
-    before(function (callback) {
+    tman.before(function (callback) {
       producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
@@ -575,7 +591,7 @@ describe('snapper2', function () {
         .once('connect', callback)
     })
 
-    it('2000 messages with server restart', function (callback) {
+    tman.it('2000 messages with server restart', function (callback) {
       var received = []
       var messages = []
       while (messages.length < 2000) messages.push(messages.length)
@@ -618,7 +634,7 @@ describe('snapper2', function () {
       }
     })
 
-    it('2000 messages to 200 consumers', function *() {
+    tman.it('2000 messages to 200 consumers', function *() {
       var consumers = []
       var messages = []
       while (messages.length < 2000) messages.push(messages.length)
