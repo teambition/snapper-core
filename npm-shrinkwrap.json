@@ -1,11 +1,11 @@
 {
   "name": "snapper-core",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "dependencies": {
     "config": {
-      "version": "1.19.0",
-      "from": "config@>=1.19.0 <1.20.0",
-      "resolved": "https://registry.npmjs.org/config/-/config-1.19.0.tgz",
+      "version": "1.20.1",
+      "from": "config@>=1.20.1 <1.21.0",
+      "resolved": "https://registry.npmjs.org/config/-/config-1.20.1.tgz",
       "dependencies": {
         "json5": {
           "version": "0.4.0",
@@ -173,9 +173,9 @@
                   "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
                 },
                 "readable-stream": {
-                  "version": "1.1.13",
+                  "version": "1.1.14",
                   "from": "readable-stream@>=1.1.9 <1.2.0",
-                  "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.13.tgz",
+                  "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz",
                   "dependencies": {
                     "core-util-is": {
                       "version": "1.0.2",
@@ -298,8 +298,8 @@
       "from": "thunk-redis@>=1.5.5 <1.6.0"
     },
     "thunks": {
-      "version": "4.1.5",
-      "from": "thunks@>=4.1.5 <5.0.0"
+      "version": "4.1.6",
+      "from": "thunks@>=4.1.6 <5.0.0"
     },
     "toa": {
       "version": "1.4.2",
@@ -320,7 +320,7 @@
         "content-disposition": {
           "version": "0.5.1",
           "from": "content-disposition@>=0.5.1 <0.6.0",
-          "resolved": "http://registry.npmjs.org/content-disposition/-/content-disposition-0.5.1.tgz"
+          "resolved": "https://registry.npmjs.org/content-disposition/-/content-disposition-0.5.1.tgz"
         },
         "content-type": {
           "version": "1.0.1",
@@ -362,7 +362,7 @@
         "fresh": {
           "version": "0.3.0",
           "from": "fresh@>=0.3.0 <0.4.0",
-          "resolved": "http://registry.npmjs.org/fresh/-/fresh-0.3.0.tgz"
+          "resolved": "https://registry.npmjs.org/fresh/-/fresh-0.3.0.tgz"
         },
         "mime-types": {
           "version": "2.1.10",
