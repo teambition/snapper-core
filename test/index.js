@@ -21,11 +21,11 @@ var producerId = 0
 tman.suite('snapper2', function () {
   this.timeout(5000)
 
-  tman.before(function *() {
+  tman.before(function * () {
     yield redisClient.flushall()
   })
 
-  tman.after(function *() {
+  tman.after(function * () {
     yield redisClient.flushall()
   })
 
@@ -121,7 +121,7 @@ tman.suite('snapper2', function () {
         return producer.joinRoom('room', '')
       })(function (err, res) {
         assert.strictEqual(err instanceof Error, true)
-      })(function *() {
+      })(function * () {
         var res = yield producer.joinRoom('test', '1')
         assert.strictEqual(res, 1)
 
@@ -158,7 +158,7 @@ tman.suite('snapper2', function () {
         assert.strictEqual(err instanceof Error, true)
         assert.strictEqual(err.message, 'Invalid params')
         return producer.request('consumers', ['userIdxxx'])
-      })(function *(err, res) {
+      })(function * (err, res) {
         assert.strictEqual(err, null)
         assert.deepEqual(res, [])
 
@@ -319,7 +319,7 @@ tman.suite('snapper2', function () {
       consumer.connect()
     })
 
-    tman.it('update user consumer state', function *() {
+    tman.it('update user consumer state', function * () {
       var userId = Consumer.genUserId()
 
       function addConsumer (id) {
@@ -548,7 +548,7 @@ tman.suite('snapper2', function () {
 
         var room = `user${userId}`
         // wait for consumer join user room!
-        thunk.delay(200)(function *() {
+        thunk.delay(200)(function * () {
           consumer.close()
           yield thunk.delay(200)
 
@@ -611,7 +611,7 @@ tman.suite('snapper2', function () {
       consumer.onclose = callback
       consumer.connect()
 
-      thunk(function *() {
+      thunk(function * () {
         // wait for consumer join user room!
         yield thunk.delay(500)
         var _messages = messages.slice()
@@ -634,7 +634,7 @@ tman.suite('snapper2', function () {
       }
     })
 
-    tman.it('2000 messages to 200 consumers', function *() {
+    tman.it('2000 messages to 200 consumers', function * () {
       var consumers = []
       var messages = []
       while (messages.length < 2000) messages.push(messages.length)

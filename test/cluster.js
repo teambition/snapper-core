@@ -25,11 +25,11 @@ tman.suite('snapper on redis cluster', function () {
   var producer = null
   var host = '127.0.0.1:' + config.port
 
-  tman.before(function *() {
+  tman.before(function * () {
     yield redis.defaultClient.flushall()
   })
 
-  tman.after(function *() {
+  tman.after(function * () {
     yield redis.defaultClient.flushall()
   })
 
@@ -45,7 +45,7 @@ tman.suite('snapper on redis cluster', function () {
       .once('connect', callback)
   })
 
-  tman.it('2000 messages, 200 rooms, 50 consumers', function *() {
+  tman.it('2000 messages, 200 rooms, 50 consumers', function * () {
     var consumers = []
     var messages = []
     var rooms = []

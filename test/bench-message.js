@@ -22,7 +22,7 @@ const consumerCount = 10
 
 exports.producer = producer
 
-thunk(function *() {
+thunk(function * () {
   var consumers = []
   var messages = []
   while (messages.length < messageCount) {

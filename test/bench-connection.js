@@ -21,7 +21,7 @@ exports.producer = producer
 exports.add = function (n) {
   n = n > 0 ? +n : 1
 
-  thunk(function *() {
+  thunk(function * () {
     while (n--) {
       let consumerId = yield addClient()
       yield addToRoom(consumerId)
