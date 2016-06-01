@@ -31,7 +31,7 @@ tman.suite('snapper2', function () {
 
   tman.suite('rpc', function () {
     tman.it('connect:Unauthorized', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: 'xxx',
         producerId: ++producerId + ''
       })
@@ -47,7 +47,7 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('connect:success', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
@@ -63,12 +63,12 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('signAuth', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
 
-      var token = producer.signAuth({test: true})
+      let token = producer.signAuth({test: true})
       assert.strictEqual(app.verifyToken(token).test, true)
 
       producer
@@ -82,12 +82,12 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('sendMessage', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
 
-      var count = 0
+      let count = 0
       producer
         .on('jsonrpc', function (obj) {
           if (obj.result > 0) count += obj.result
@@ -100,7 +100,7 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('joinRoom, leaveRoom', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
@@ -122,7 +122,7 @@ tman.suite('snapper2', function () {
       })(function (err, res) {
         assert.strictEqual(err instanceof Error, true)
       })(function * () {
-        var res = yield producer.joinRoom('test', '1')
+        let res = yield producer.joinRoom('test', '1')
         assert.strictEqual(res, 1)
 
         res = yield producer.joinRoom('test', '2')
@@ -137,7 +137,7 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('request', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
@@ -191,11 +191,11 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('reconnecting', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
-      var reconnecting = false
+      let reconnecting = false
 
       producer
         .on('error', function (err) {
@@ -214,11 +214,11 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('close', function (callback) {
-      var producer = new Producer(config.rpcPort, {
+      let producer = new Producer(config.rpcPort, {
         secretKeys: config.tokenSecret,
         producerId: ++producerId + ''
       })
-      var hadError = false
+      let hadError = false
 
       producer
         .on('error', function (err) {
@@ -236,8 +236,8 @@ tman.suite('snapper2', function () {
   })
 
   tman.suite('ws', function () {
-    var producer = null
-    var host = '127.0.0.1:' + config.port
+    let producer = null
+    let host = '127.0.0.1:' + config.port
 
     tman.before(function (callback) {
       producer = new Producer(config.rpcPort, {
@@ -254,7 +254,7 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('connect:Unauthorized', function (callback) {
-      var consumer = new Consumer(host, {
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: 'errorToken'
       })
@@ -271,8 +271,8 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('connect:success', function (callback) {
-      var token = producer.signAuth({userId: Consumer.genUserId()})
-      var consumer = new Consumer(host, {
+      let token = producer.signAuth({userId: Consumer.genUserId()})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
@@ -288,8 +288,8 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('echo request', function (callback) {
-      var token = producer.signAuth({userId: Consumer.genUserId()})
-      var consumer = new Consumer(host, {
+      let token = producer.signAuth({userId: Consumer.genUserId()})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
@@ -306,8 +306,8 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('invalid echo request', function (callback) {
-      var token = producer.signAuth({userId: Consumer.genUserId()})
-      var consumer = new Consumer(host, {
+      let token = producer.signAuth({userId: Consumer.genUserId()})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
@@ -320,12 +320,12 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('update user consumer state', function * () {
-      var userId = Consumer.genUserId()
+      let userId = Consumer.genUserId()
 
       function addConsumer (id) {
         return function (done) {
-          var token = producer.signAuth({userId: userId, id: id})
-          var consumer = new Consumer(host, {
+          let token = producer.signAuth({userId: userId, id: id})
+          let consumer = new Consumer(host, {
             path: '/websocket',
             token: token
           })
@@ -339,7 +339,7 @@ tman.suite('snapper2', function () {
         }
       }
 
-      var consumerIds = null
+      let consumerIds = null
       yield thunk.delay(200)
       consumerIds = yield producer.request('consumers', [userId])
       assert.deepEqual(consumerIds, [])
@@ -376,16 +376,16 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('receive message in order', function (callback) {
-      var userId = Consumer.genUserId()
-      var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, {
+      let userId = Consumer.genUserId()
+      let token = producer.signAuth({userId: userId})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
-      var res = []
+      let res = []
 
       consumer.onopen = function () {
-        var room = `user${userId}`
+        let room = `user${userId}`
         // wait for consumer join user room!
         thunk.delay(200)(function () {
           producer
@@ -415,13 +415,13 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('join room and receive message', function (callback) {
-      var userId = Consumer.genUserId()
-      var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, {
+      let userId = Consumer.genUserId()
+      let token = producer.signAuth({userId: userId})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
-      var res = []
+      let res = []
 
       consumer.onopen = function () {
         producer.joinRoom('test', consumer.consumerId)()
@@ -469,13 +469,13 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('reconnect and receive message', function (callback) {
-      var userId = Consumer.genUserId()
-      var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, {
+      let userId = Consumer.genUserId()
+      let token = producer.signAuth({userId: userId})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
-      var res = []
+      let res = []
 
       consumer.onopen = function () {
         producer.joinRoom('test', consumer.consumerId)()
@@ -509,7 +509,7 @@ tman.suite('snapper2', function () {
             .sendMessage('test', JSON.stringify(10))
             .sendMessage('test', JSON.stringify(null))
 
-          var consumer = new Consumer(host, {
+          let consumer = new Consumer(host, {
             path: '/websocket',
             token: token
           })
@@ -534,19 +534,19 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('ignore excess messages(2048)', function (callback) {
-      var userId = Consumer.genUserId()
-      var token = producer.signAuth({userId: userId})
-      var consumer = new Consumer(host, {
+      let userId = Consumer.genUserId()
+      let token = producer.signAuth({userId: userId})
+      let consumer = new Consumer(host, {
         path: '/websocket',
         token: token
       })
-      var res = []
+      let res = []
 
       consumer.onopen = function () {
         // reset onpen
         consumer.onopen = function () {}
 
-        var room = `user${userId}`
+        let room = `user${userId}`
         // wait for consumer join user room!
         thunk.delay(200)(function * () {
           consumer.close()
@@ -576,8 +576,8 @@ tman.suite('snapper2', function () {
   tman.suite('stats && chaos', function () {
     this.timeout(50000)
 
-    var producer = null
-    var host = '127.0.0.1:' + config.port
+    let producer = null
+    let host = '127.0.0.1:' + config.port
 
     tman.before(function (callback) {
       producer = new Producer(config.rpcPort, {
@@ -592,12 +592,12 @@ tman.suite('snapper2', function () {
     })
 
     tman.it('2000 messages with server restart', function (callback) {
-      var received = []
-      var messages = []
+      let received = []
+      let messages = []
       while (messages.length < 2000) messages.push(messages.length)
 
-      var userId = Consumer.genUserId()
-      var consumer = new Consumer(host, {
+      let userId = Consumer.genUserId()
+      let consumer = new Consumer(host, {
         path: '/websocket',
         transports: ['websocket'], // easy to trigger "xhr poll error"
         token: producer.signAuth({userId: userId})
@@ -614,7 +614,7 @@ tman.suite('snapper2', function () {
       thunk(function * () {
         // wait for consumer join user room!
         yield thunk.delay(500)
-        var _messages = messages.slice()
+        let _messages = messages.slice()
         while (_messages.length) {
           if (_messages.length === 1000) restartServer()
           let random = Math.ceil(Math.random() * 10)
@@ -634,10 +634,10 @@ tman.suite('snapper2', function () {
       }
     })
 
-    tman.it('2000 messages to 200 consumers', function * () {
-      var consumers = []
-      var messages = []
-      while (messages.length < 2000) messages.push(messages.length)
+    tman.it('1000 messages to 200 consumers', function * () {
+      let consumers = []
+      let messages = []
+      while (messages.length < 1000) messages.push(messages.length)
       while (consumers.length < 200) {
         consumers.push(new Consumer(host, {
           path: '/websocket',
@@ -647,10 +647,10 @@ tman.suite('snapper2', function () {
       }
 
       // 注册 consumers 消息处理器
-      var thunkQueue = ThunkQueue()
+      let thunkQueue = ThunkQueue()
       // 等待 consumers 连接并加入 chaos room
       yield consumers.map(function (consumer) {
-        var received = []
+        let received = []
         thunkQueue.push(thunk(function (done) {
           consumer.message = function (message) {
             if (message === null) {
@@ -675,7 +675,7 @@ tman.suite('snapper2', function () {
       })
 
       // 开始发送消息
-      var _messages = messages.slice()
+      let _messages = messages.slice()
       while (_messages.length) {
         let random = Math.ceil(Math.random() * 100)
         // 等待 random 毫秒
@@ -693,9 +693,9 @@ tman.suite('snapper2', function () {
 
       // get stats
       let res = yield request(app.server).get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
-      var info = res.body.stats
-      assert.strictEqual(info.total.producerMessages >= 2000, true)
-      assert.strictEqual(info.total.consumerMessages >= 2000 * 20, true)
+      let info = res.body.stats
+      assert.strictEqual(info.total.producerMessages >= 1000, true)
+      assert.strictEqual(info.total.consumerMessages >= 1000 * 20, true)
       assert.strictEqual(info.total.consumers >= 200, true)
       assert.strictEqual(info.total.rooms >= 200, true)
       assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 200, true)
