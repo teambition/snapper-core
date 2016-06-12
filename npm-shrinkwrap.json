@@ -1,12 +1,12 @@
 {
   "name": "snapper-core",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.4",
   "dependencies": {
     "config": {
-      "version": "1.20.4",
-      "resolved": "https://registry.npmjs.org/config/-/config-1.20.4.tgz",
+      "version": "1.21.0",
+      "resolved": "https://registry.npmjs.org/config/-/config-1.21.0.tgz",
       "dependencies": {
         "json5": {
           "version": "0.4.0",
@@ -253,12 +253,12 @@
       "resolved": "https://registry.npmjs.org/respjs/-/respjs-3.1.2.tgz"
     },
     "thunk-redis": {
-      "version": "1.6.3",
-      "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.6.3.tgz"
+      "version": "1.6.5",
+      "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.6.5.tgz"
     },
     "thunks": {
-      "version": "4.2.0",
-      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.2.0.tgz"
+      "version": "4.2.1",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.2.1.tgz"
     },
     "toa": {
       "version": "1.5.0",
