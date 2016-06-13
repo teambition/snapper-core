@@ -533,7 +533,7 @@ tman.suite('snapper2', function () {
       consumer.connect()
     })
 
-    tman.it('ignore excess messages(2048)', function (callback) {
+    tman.it.skip('ignore excess messages(2048)', function (callback) {
       let userId = Consumer.genUserId()
       let token = producer.signAuth({userId: userId})
       let consumer = new Consumer(host, {
