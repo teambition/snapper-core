@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.4.5",
+  "version": "2.5.0",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -34,6 +34,7 @@
     "thunk-redis": "~1.6.5",
     "thunks": "^4.2.1",
     "toa": "~1.5.0",
+    "toa-net": "^0.5.3",
     "toa-pm": "~0.2.2",
     "toa-token": "~2.0.0"
   },

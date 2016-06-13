@@ -41,7 +41,7 @@ tman.suite('snapper2', function () {
           assert.strictEqual('Should not run', true)
         })
         .on('error', function (err) {
-          assert.strictEqual(err.code, 400)
+          assert.strictEqual(err.code, 401)
         })
         .on('close', callback)
     })
@@ -56,8 +56,8 @@ tman.suite('snapper2', function () {
         .on('connect', function () {
           this.close()
         })
-        .on('error', function () {
-          assert.strictEqual('Should not run', true)
+        .on('error', function (err) {
+          assert.strictEqual('Should not run', err)
         })
         .on('close', callback)
     })
@@ -202,14 +202,14 @@ tman.suite('snapper2', function () {
           assert.strictEqual(err instanceof Error, true)
         })
         .on('connect', function () {
-          if (reconnecting) {
-            producer.close()
-            callback()
-          } else rpc.destroy()
+          if (reconnecting) producer.close()
+          else rpc.close(() => rpc.listen(config.rpcPort))
         })
         .on('reconnecting', function () {
           reconnecting = true
-          rpc.start()
+        })
+        .on('close', function () {
+          callback()
         })
     })
 
@@ -627,9 +627,9 @@ tman.suite('snapper2', function () {
       })()
 
       function restartServer () {
-        rpc.destroy()
+        rpc.close()
         thunk.delay(1000)(function () {
-          rpc.start()
+          rpc.listen(config.rpcPort)
         })
       }
     })
@@ -695,7 +695,7 @@ tman.suite('snapper2', function () {
       let res = yield request(app.server).get(`/stats?token=${producer.signAuth({name: 'snapper'})}`)
       let info = res.body.stats
       assert.strictEqual(info.total.producerMessages >= 1000, true)
-      assert.strictEqual(info.total.consumerMessages >= 1000 * 20, true)
+      assert.strictEqual(info.total.consumerMessages >= 1000 * 200, true)
       assert.strictEqual(info.total.consumers >= 200, true)
       assert.strictEqual(info.total.rooms >= 200, true)
       assert.strictEqual(info.current[`${stats.serverId}:${config.instancePort}`] >= 200, true)
