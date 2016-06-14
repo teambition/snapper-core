@@ -13,7 +13,7 @@
   "name": "snapper-rpc",
   "script": "./rpc.js",
   "exec_mode": "cluster_mode",
-  "instances": 1,
+  "instances": 2,
   "merge_logs": true,
   "autorestart": false,
   "env": {

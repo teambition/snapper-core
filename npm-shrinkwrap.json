@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.4",
   "dependencies": {
@@ -357,8 +357,8 @@
       }
     },
     "toa-net": {
-      "version": "0.5.3",
-      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-0.5.3.tgz"
+      "version": "0.5.4",
+      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-0.5.4.tgz"
     },
     "toa-pm": {
       "version": "0.2.2",

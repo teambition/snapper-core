@@ -2,7 +2,7 @@
   "name": "snapper",
   "script": "./app.js",
   "exec_mode": "cluster_mode",
-  "instances": 6,
+  "instances": 3,
   "merge_logs": true,
   "max_memory_restart": "1G",
   "restart_delay": 1000,
@@ -15,7 +15,7 @@
   "exec_mode": "cluster_mode",
   "instances": 2,
   "merge_logs": true,
-  "max_memory_restart": "2G",
+  "max_memory_restart": "1G",
   "restart_delay": 1000,
   "env": {
     "NODE_ENV": "release"
