@@ -1,6 +1,7 @@
 'use strict'
 
 const tman = require('tman')
+const net = require('toa-net')
 const config = require('config')
 const assert = require('assert')
 const thunk = require('thunks')()
@@ -10,6 +11,7 @@ const Producer = require('snapper-producer')
 
 const app = require('../app')
 const rpc = require('../rpc')
+const tool = require('../lib/tool')
 const redis = require('../lib/service/redis')
 const stats = require('../lib/service/stats')
 const Consumer = require('./lib/consumer')
@@ -160,7 +162,7 @@ tman.suite('snapper2', function () {
         return producer.request('consumers', ['userIdxxx'])
       })(function * (err, res) {
         assert.strictEqual(err, null)
-        assert.deepEqual(res, [])
+        assert.deepEqual(res, {length: 0, android: 0, web: 0, ios: 0})
 
         let consumer = yield function (done) {
           let host = '127.0.0.1:' + config.port
@@ -184,7 +186,7 @@ tman.suite('snapper2', function () {
 
         yield thunk.delay(200)
         res = yield producer.request('consumers', [consumer.userId])
-        assert.deepEqual(res, [consumer.consumerId])
+        assert.deepEqual(res, {length: 1, android: 0, ios: 0, web: 1})
         consumer.close()
         producer.close()
       })(callback)
@@ -251,6 +253,13 @@ tman.suite('snapper2', function () {
 
     tman.after(function () {
       producer.close()
+    })
+
+    tman.it('session2ID', function () {
+      const auth = new net.Auth(config.tokenSecret)
+      let session = auth.decode(auth.sign({userId: Consumer.genUserId()}))
+      let id = tool.session2ID(session)
+      assert.strictEqual(/snapper\.ws=([0-9a-zA-Z.~_-]{24,38})/.test(`snapper.ws=${id}`), true)
     })
 
     tman.it('connect:Unauthorized', function (callback) {
@@ -339,40 +348,40 @@ tman.suite('snapper2', function () {
         }
       }
 
-      let consumerIds = null
+      let res = null
       yield thunk.delay(200)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds, [])
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 0, android: 0, web: 0, ios: 0})
 
       let consumer1 = yield addConsumer(1)
       yield thunk.delay(200)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds, [consumer1.consumerId])
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 1, android: 0, ios: 0, web: 1})
 
       let consumer2 = yield addConsumer(2)
       yield thunk.delay(200)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId].sort())
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 2, android: 0, ios: 0, web: 2})
 
       let consumer3 = yield addConsumer(3)
       yield thunk.delay(200)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer2.consumerId, consumer3.consumerId].sort())
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 3, android: 0, ios: 0, web: 3})
 
       consumer2.close()
       yield thunk.delay(100)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds.sort(), [consumer1.consumerId, consumer3.consumerId].sort())
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 2, android: 0, ios: 0, web: 2})
 
       consumer1.close()
       yield thunk.delay(100)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds, [consumer3.consumerId])
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 1, android: 0, ios: 0, web: 1})
 
       consumer3.close()
       yield thunk.delay(100)
-      consumerIds = yield producer.request('consumers', [userId])
-      assert.deepEqual(consumerIds, [])
+      res = yield producer.request('consumers', [userId])
+      assert.deepEqual(res, {length: 0, android: 0, ios: 0, web: 0})
     })
 
     tman.it('receive message in order', function (callback) {
