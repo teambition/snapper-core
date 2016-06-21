@@ -90,12 +90,11 @@ var token = producer.signAuth({userId: 'userIdxxx'})
 ```js
 producer.joinRoom(
   'projects/51762b8f78cfa9f357000011', // 这是 teambition 的一个项目，抽象为一个 room
-  'lkoH6jeg8ATcptZQFHHH7w~~', // 这是用户连接到 snapper-core 获得的一个 consumerId
-  function (err, res) {
-    /*...*/
-    // 响应结果给用户
-  }
-)
+  'lkoH6jeg8ATcptZQFHHH7w~~' // 这是用户连接到 snapper-core 获得的一个 consumerId
+)(function (err, res) {
+  /*...*/
+  // 响应结果给用户
+})
 ```
 
 API 往 room 推送消息：
