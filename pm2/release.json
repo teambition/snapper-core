@@ -4,7 +4,7 @@
   "exec_mode": "cluster_mode",
   "instances": 3,
   "merge_logs": true,
-  "max_memory_restart": "1G",
+  "max_memory_restart": "2G",
   "restart_delay": 1000,
   "env": {
     "NODE_ENV": "release"

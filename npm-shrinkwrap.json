@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.6.2",
+  "version": "2.7.0",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.4",
   "dependencies": {
@@ -257,8 +257,8 @@
       "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.6.5.tgz"
     },
     "thunks": {
-      "version": "4.2.1",
-      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.2.1.tgz"
+      "version": "4.2.2",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.2.2.tgz"
     },
     "toa": {
       "version": "1.5.1",
