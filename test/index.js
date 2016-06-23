@@ -322,21 +322,22 @@ tman.suite('snapper2', function () {
     tman.it('update user consumer state', function * () {
       let userId = Consumer.genUserId()
 
-      function addConsumer (id) {
-        return function (done) {
-          let token = producer.signAuth({userId: userId, id: id})
-          let consumer = new Consumer(host, {
-            path: '/websocket',
-            token: token
-          })
-          consumer.onerror = function () {
-            assert.strictEqual('Should not run', true)
-          }
-          consumer.onopen = function () {
-            done(null, this)
-          }
-          consumer.connect()
+      function * addConsumer (id) {
+        // delay 1秒防止生成的 consumerId 冲突
+        yield thunk.delay(1100)
+        let token = producer.signAuth({userId: userId, id: id})
+        let consumer = new Consumer(host, {
+          path: '/websocket',
+          token: token
+        })
+        consumer.onerror = function () {
+          assert.strictEqual('Should not run', true)
         }
+        consumer.connect()
+        yield (done) => {
+          consumer.onopen = done
+        }
+        return consumer
       }
 
       let res = null
@@ -535,7 +536,7 @@ tman.suite('snapper2', function () {
   })
 
   tman.suite('stats && chaos', function () {
-    this.timeout(50000)
+    this.timeout(20000)
 
     let producer = null
     let host = '127.0.0.1:' + config.port

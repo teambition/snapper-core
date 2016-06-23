@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.4",
   "dependencies": {
