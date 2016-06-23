@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.7.9",
+  "version": "2.8.0",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.5.0",
   "dependencies": {
@@ -143,8 +143,8 @@
               "resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.4.10.tgz",
               "dependencies": {
                 "inherits": {
-                  "version": "2.0.1",
-                  "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
+                  "version": "2.0.3",
+                  "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz"
                 },
                 "readable-stream": {
                   "version": "1.1.14",
@@ -257,12 +257,12 @@
       "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.7.0.tgz"
     },
     "thunks": {
-      "version": "4.5.0",
-      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.5.0.tgz"
+      "version": "4.5.1",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.5.1.tgz"
     },
     "toa": {
-      "version": "1.8.7",
-      "resolved": "https://registry.npmjs.org/toa/-/toa-1.8.7.tgz",
+      "version": "1.8.11",
+      "resolved": "https://registry.npmjs.org/toa/-/toa-1.8.11.tgz",
       "dependencies": {
         "accepts": {
           "version": "1.3.3",
@@ -347,8 +347,8 @@
       }
     },
     "toa-net": {
-      "version": "1.3.11",
-      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.3.11.tgz",
+      "version": "1.3.12",
+      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.3.12.tgz",
       "dependencies": {
         "msgp": {
           "version": "1.0.0",
@@ -370,7 +370,7 @@
           "dependencies": {
             "joi": {
               "version": "6.10.1",
-              "resolved": "http://registry.npmjs.org/joi/-/joi-6.10.1.tgz",
+              "resolved": "https://registry.npmjs.org/joi/-/joi-6.10.1.tgz",
               "dependencies": {
                 "hoek": {
                   "version": "2.16.3",
@@ -378,7 +378,7 @@
                 },
                 "isemail": {
                   "version": "1.2.0",
-                  "resolved": "http://registry.npmjs.org/isemail/-/isemail-1.2.0.tgz"
+                  "resolved": "https://registry.npmjs.org/isemail/-/isemail-1.2.0.tgz"
                 },
                 "moment": {
                   "version": "2.14.1",
@@ -386,7 +386,7 @@
                 },
                 "topo": {
                   "version": "1.1.0",
-                  "resolved": "http://registry.npmjs.org/topo/-/topo-1.1.0.tgz"
+                  "resolved": "https://registry.npmjs.org/topo/-/topo-1.1.0.tgz"
                 }
               }
             },
