@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.4",
   "dependencies": {
@@ -25,8 +25,8 @@
       }
     },
     "engine.io": {
-      "version": "1.6.9",
-      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.6.9.tgz",
+      "version": "1.6.11",
+      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.6.11.tgz",
       "dependencies": {
         "accepts": {
           "version": "1.1.4",
@@ -89,8 +89,8 @@
           }
         },
         "ws": {
-          "version": "1.0.1",
-          "resolved": "https://registry.npmjs.org/ws/-/ws-1.0.1.tgz",
+          "version": "1.1.0",
+          "resolved": "https://registry.npmjs.org/ws/-/ws-1.1.0.tgz",
           "dependencies": {
             "options": {
               "version": "0.0.6",
