@@ -251,6 +251,12 @@ tman.suite('snapper2', function () {
       let session = auth.decode(auth.sign({userId: Consumer.genUserId()}))
       let id = tool.session2ID(session)
       assert.strictEqual(/snapper\.ws=([0-9a-zA-Z.~_-]{24,38})/.test(`snapper.ws=${id}`), true)
+      id = tool.session2ID({
+        exp: 1467429475,
+        userId: '55a07f2dee06c78e1357b0ad',
+        source: 'teambition'
+      })
+      assert.strictEqual(/snapper\.ws=([0-9a-zA-Z.~_-]{24,38})/.test(`snapper.ws=${id}`), true)
     })
 
     tman.it('connect:Unauthorized', function (callback) {
