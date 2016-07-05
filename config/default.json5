@@ -1,0 +1,26 @@
+{
+  // 消费者端（客户端） websocket 连接端口
+  // 由于需要维持连接状态，当开启多进程时，各进程监听的端口不同，会自动 +1，
+  // 需要 nginx ip_hash 支持，见 docs/snapper.md
+  "port": 7701,
+  // 生产者端（API 服务）RCP 服务端口
+  "rpcPort": 7700,
+  // 设置 Node.js 进程最大允许的 TCP 连接数
+  "backlog": 102400,
+  // 日志输出等级
+  "logLevel": 6,
+  // redis 服务键名空间，多个服务共用 redis 时通过键名空间避免冲突
+  "redisPrefix": "SNP",
+  // 本服务的认证密钥，生产者或消费者连接本服务时都需要通过身份验证
+  // 更新密钥时确保客户端做同步更新，PRIVATE 请生成对应的密钥，不要用默认值！
+  "tokenSecret": ["tokenSecretXXX"],
+  // token 默认的有效期
+  "tokenExpires": 172800,
+  // 消息缓存队列默认有效期
+  "redisQueueExpires": 86400,
+  // redis 配置
+  "redis": {
+    "hosts": ["127.0.0.1:6379"],
+    "options": null
+  }
+}
