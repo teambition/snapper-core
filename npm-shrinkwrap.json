@@ -1,8 +1,8 @@
 {
   "name": "snapper-core",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "npm-shrinkwrap-version": "200.5.1",
-  "node-version": "v4.4.4",
+  "node-version": "v4.4.7",
   "dependencies": {
     "config": {
       "version": "1.21.0",
@@ -239,8 +239,8 @@
               "resolved": "https://registry.npmjs.org/ecdsa-sig-formatter/-/ecdsa-sig-formatter-1.0.7.tgz",
               "dependencies": {
                 "base64-url": {
-                  "version": "1.2.2",
-                  "resolved": "https://registry.npmjs.org/base64-url/-/base64-url-1.2.2.tgz"
+                  "version": "1.3.2",
+                  "resolved": "https://registry.npmjs.org/base64-url/-/base64-url-1.3.2.tgz"
                 }
               }
             }
@@ -257,12 +257,12 @@
       "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.6.5.tgz"
     },
     "thunks": {
-      "version": "4.2.2",
-      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.2.2.tgz"
+      "version": "4.3.0",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.3.0.tgz"
     },
     "toa": {
-      "version": "1.5.1",
-      "resolved": "https://registry.npmjs.org/toa/-/toa-1.5.1.tgz",
+      "version": "1.6.3",
+      "resolved": "https://registry.npmjs.org/toa/-/toa-1.6.3.tgz",
       "dependencies": {
         "accepts": {
           "version": "1.3.3",
@@ -357,8 +357,14 @@
       }
     },
     "toa-net": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.0.1.tgz"
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.2.0.tgz",
+      "dependencies": {
+        "msgp": {
+          "version": "0.2.1",
+          "resolved": "https://registry.npmjs.org/msgp/-/msgp-0.2.1.tgz"
+        }
+      }
     },
     "toa-pm": {
       "version": "0.2.2",
