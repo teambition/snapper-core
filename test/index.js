@@ -542,7 +542,7 @@ tman.suite('snapper2', function () {
   })
 
   tman.suite('stats && chaos', function () {
-    this.timeout(20000)
+    this.timeout(50000)
 
     let producer = null
     let host = '127.0.0.1:' + config.port
