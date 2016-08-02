@@ -1,6 +1,6 @@
 {
   "name": "snapper-core",
-  "version": "2.7.6",
+  "version": "2.7.7",
   "npm-shrinkwrap-version": "200.5.1",
   "node-version": "v4.4.7",
   "dependencies": {
@@ -257,12 +257,12 @@
       "resolved": "https://registry.npmjs.org/thunk-redis/-/thunk-redis-1.6.6.tgz"
     },
     "thunks": {
-      "version": "4.3.0",
-      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.3.0.tgz"
+      "version": "4.4.2",
+      "resolved": "https://registry.npmjs.org/thunks/-/thunks-4.4.2.tgz"
     },
     "toa": {
-      "version": "1.7.1",
-      "resolved": "https://registry.npmjs.org/toa/-/toa-1.7.1.tgz",
+      "version": "1.8.2",
+      "resolved": "https://registry.npmjs.org/toa/-/toa-1.8.2.tgz",
       "dependencies": {
         "accepts": {
           "version": "1.3.3",
@@ -347,8 +347,8 @@
       }
     },
     "toa-net": {
-      "version": "1.3.8",
-      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.3.8.tgz",
+      "version": "1.3.9",
+      "resolved": "https://registry.npmjs.org/toa-net/-/toa-net-1.3.9.tgz",
       "dependencies": {
         "msgp": {
           "version": "1.0.0",
@@ -361,16 +361,46 @@
       "resolved": "https://registry.npmjs.org/toa-pm/-/toa-pm-0.2.2.tgz"
     },
     "toa-token": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/toa-token/-/toa-token-2.0.0.tgz",
+      "version": "2.1.0",
+      "resolved": "https://registry.npmjs.org/toa-token/-/toa-token-2.1.0.tgz",
       "dependencies": {
         "jsonwebtoken": {
-          "version": "5.4.1",
-          "resolved": "https://registry.npmjs.org/jsonwebtoken/-/jsonwebtoken-5.4.1.tgz",
+          "version": "7.1.7",
+          "resolved": "https://registry.npmjs.org/jsonwebtoken/-/jsonwebtoken-7.1.7.tgz",
           "dependencies": {
+            "joi": {
+              "version": "6.10.1",
+              "resolved": "https://registry.npmjs.org/joi/-/joi-6.10.1.tgz",
+              "dependencies": {
+                "hoek": {
+                  "version": "2.16.3",
+                  "resolved": "https://registry.npmjs.org/hoek/-/hoek-2.16.3.tgz"
+                },
+                "isemail": {
+                  "version": "1.2.0",
+                  "resolved": "https://registry.npmjs.org/isemail/-/isemail-1.2.0.tgz"
+                },
+                "moment": {
+                  "version": "2.14.1",
+                  "resolved": "https://registry.npmjs.org/moment/-/moment-2.14.1.tgz"
+                },
+                "topo": {
+                  "version": "1.1.0",
+                  "resolved": "https://registry.npmjs.org/topo/-/topo-1.1.0.tgz"
+                }
+              }
+            },
+            "lodash.once": {
+              "version": "4.1.0",
+              "resolved": "https://registry.npmjs.org/lodash.once/-/lodash.once-4.1.0.tgz"
+            },
             "ms": {
               "version": "0.7.1",
               "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.1.tgz"
+            },
+            "xtend": {
+              "version": "4.0.1",
+              "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz"
             }
           }
         }
