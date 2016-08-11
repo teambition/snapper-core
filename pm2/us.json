@@ -1,0 +1,23 @@
+[{
+  "name": "snapper",
+  "script": "./app.js",
+  "exec_mode": "cluster_mode",
+  "instances": 2,
+  "merge_logs": true,
+  "max_memory_restart": "1G",
+  "restart_delay": 1000,
+  "env": {
+    "NODE_ENV": "release"
+  }
+}, {
+  "name": "snapper-rpc",
+  "script": "./rpc.js",
+  "exec_mode": "cluster_mode",
+  "instances": 2,
+  "merge_logs": true,
+  "max_memory_restart": "500G",
+  "restart_delay": 1000,
+  "env": {
+    "NODE_ENV": "release"
+  }
+}]
