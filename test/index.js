@@ -187,6 +187,7 @@ tman.suite('snapper2', function () {
       yield (done) => {
         consumer.onopen = done
       }
+      yield thunk.delay(100)
       res = yield producer.request('consumers', [userId])
       assert.deepEqual(res, {length: 1, android: 0, ios: 0, web: 1})
       consumer.close()
