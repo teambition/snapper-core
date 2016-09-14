@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.8.0",
+  "version": "2.8.1",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -31,10 +31,10 @@
     "jsonrpc-lite": "~1.2.3",
     "jws": "~3.1.3",
     "respjs": "^3.2.0",
-    "thunk-redis": "~1.7.0",
-    "thunks": "^4.5.1",
-    "toa": "~1.8.11",
-    "toa-net": "^1.3.12",
+    "thunk-redis": "~1.7.1",
+    "thunks": "^4.7.1",
+    "toa": "~2.0.1",
+    "toa-net": "^1.3.13",
     "toa-pm": "~0.2.2",
     "toa-token": "~2.1.0"
   },
@@ -44,7 +44,7 @@
     "standard": "^8.0.0",
     "supertest": "^2.0.0",
     "thunk-queue": "^1.1.3",
-    "tman": "^1.4.2"
+    "tman": "^1.4.5"
   },
   "scripts": {
     "start": "node app.js",
