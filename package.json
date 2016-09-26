@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.8.1",
+  "version": "2.8.2",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -12,6 +12,12 @@
   },
   "engines": {
     "node": ">=4"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "test": "standard && tman test/index.js",
+    "test-self": "node test_self.js",
+    "test-cluster": "tman test/cluster.js"
   },
   "homepage": "https://github.com/teambition/snapper-core",
   "keywords": [
@@ -31,30 +37,26 @@
     "jsonrpc-lite": "~1.2.3",
     "jws": "~3.1.3",
     "respjs": "^3.2.0",
+    "snapper-consumer": "^1.3.0",
+    "snapper-producer": "^2.0.5",
     "thunk-redis": "~1.7.1",
-    "thunks": "^4.7.1",
-    "toa": "~2.0.1",
-    "toa-net": "^1.3.13",
+    "thunks": "^4.7.5",
+    "toa": "~2.2.1",
+    "toa-net": "^1.3.14",
     "toa-pm": "~0.2.2",
     "toa-token": "~2.1.0"
   },
   "devDependencies": {
-    "snapper-consumer": "^1.3.0",
-    "snapper-producer": "^2.0.5",
-    "standard": "^8.0.0",
+    "standard": "^8.1.0",
     "supertest": "^2.0.0",
-    "thunk-queue": "^1.1.3",
-    "tman": "^1.4.5"
-  },
-  "scripts": {
-    "start": "node app.js",
-    "test": "standard && tman test/index.js",
-    "test-cluster": "tman test/cluster.js"
+    "thunk-queue": "^1.1.4",
+    "tman": "^1.6.0"
   },
   "files": [
     "README.md",
     "app.js",
     "rpc.js",
+    "test_self.js",
     "bin",
     "config",
     "lib",
