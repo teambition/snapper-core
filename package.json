@@ -4,7 +4,7 @@
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "2.8.2",
+  "version": "2.8.3",
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -29,28 +29,28 @@
     "teambition"
   ],
   "dependencies": {
-    "config": "~1.21.0",
-    "debug": "~2.2.0",
-    "engine.io": "~1.6.11",
-    "http-errors": "~1.5.0",
+    "config": "~1.24.0",
+    "debug": "~2.3.2",
+    "engine.io": "~1.7.2",
+    "http-errors": "~1.5.1",
     "ilog": "^1.0.3",
     "jsonrpc-lite": "~1.2.3",
-    "jws": "~3.1.3",
+    "jws": "~3.1.4",
     "respjs": "^3.2.0",
-    "snapper-consumer": "^1.3.0",
-    "snapper-producer": "^2.0.5",
-    "thunk-redis": "~1.7.1",
+    "thunk-redis": "~1.7.3",
     "thunks": "^4.7.5",
-    "toa": "~2.2.1",
+    "toa": "~2.4.0",
     "toa-net": "^1.3.14",
     "toa-pm": "~0.2.2",
-    "toa-token": "~2.1.0"
+    "toa-token": "~2.1.1"
   },
   "devDependencies": {
-    "standard": "^8.1.0",
-    "supertest": "^2.0.0",
-    "thunk-queue": "^1.1.4",
-    "tman": "^1.6.0"
+    "snapper-consumer": "^1.3.1",
+    "snapper-producer": "^2.0.6",
+    "standard": "^8.5.0",
+    "supertest": "^2.0.1",
+    "thunk-queue": "^1.1.5",
+    "tman": "^1.6.2"
   },
   "files": [
     "README.md",
