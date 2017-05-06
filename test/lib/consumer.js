@@ -22,5 +22,5 @@ Consumer.prototype.onmessage = function (event) {
 
 var userId = 0
 function genUserId () {
-  return crypto.createHash('md5').update(new Buffer(++userId + '')).digest('hex').slice(0, 24)
+  return crypto.createHash('md5').update(Buffer.from(++userId + '')).digest('hex').slice(0, 24)
 }

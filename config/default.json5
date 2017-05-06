@@ -6,7 +6,7 @@
   // 生产者端（API 服务）RCP 服务端口
   "rpcPort": 7700,
   // 设置 Node.js 进程最大允许的 TCP 连接数
-  "backlog": 102400,
+  "backlog": 10240,
   // 日志输出等级
   "logLevel": 6,
   // redis 服务键名空间，多个服务共用 redis 时通过键名空间避免冲突
